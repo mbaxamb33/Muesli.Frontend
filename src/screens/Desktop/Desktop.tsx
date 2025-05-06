@@ -1,7 +1,6 @@
 import {
   ActivityIcon,
   ClipboardIcon,
-  EyeIcon,
   HelpCircleIcon,
   LogOutIcon,
   MoonIcon,
@@ -54,30 +53,29 @@ export const Desktop = (): JSX.Element => {
     <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex flex-row justify-center w-full min-h-screen transition-colors duration-300`}>
       <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} w-full min-h-screen transition-colors duration-300`}>
         <aside className={`relative w-60 h-screen ${isDark ? 'bg-[#17162e]' : 'bg-white'} flex flex-col transition-colors duration-300`}>
-          {/* Header with wallet info */}
-          <header className={`w-full h-[67px] border-b ${isDark ? 'border-opacity-20 border-gray-500' : 'border-gray-200'} transition-colors duration-300`}>
-            <div className="p-4 flex items-center">
-              <div className={`w-6 h-6 ${isDark ? 'bg-[#221f3b]' : 'bg-gray-200'} rounded-xl flex items-center justify-center transition-colors duration-300`}>
-                <img
-                  className="w-[11px] h-[11px]"
-                  alt="Group"
-                  src="https://c.animaapp.com/macgsy7nnXUdJ6/img/group-30.png"
-                />
-              </div>
-
-              <div className="ml-2">
-                <div className={`[font-family:'Segoe_UI-Regular',Helvetica] font-normal ${isDark ? 'text-[#f0f0f0]' : 'text-gray-800'} text-sm tracking-[-0.56px] transition-colors duration-300`}>
-                  0x34...3214
-                </div>
-
-                <div className="flex items-center">
-                  <div className={`[font-family:'Segoe_UI-Regular',Helvetica] font-normal ${isDark ? 'text-[#bdbdbd]' : 'text-gray-600'} text-xs tracking-[-0.48px] transition-colors duration-300`}>
-                    $54,212.52
-                  </div>
-                  <EyeIcon className={`ml-1 w-3 h-3 ${isDark ? 'text-[#bdbdbd]' : 'text-gray-600'} transition-colors duration-300`} />
-                </div>
-              </div>
-            </div>
+          {/* Logo Header */}
+          <header className={`w-full h-[67px] border-b ${isDark ? 'border-opacity-20 border-gray-500' : 'border-gray-200'} transition-colors duration-300 flex items-center px-4`}>
+            <h1 
+              className={`
+                cursor-pointer
+                font-bold
+                text-2xl
+                leading-[33.6px]
+                ${isDark ? 'text-white' : 'text-gray-800'}
+                transition-colors duration-300
+                w-full
+                text-left
+              `}
+              style={{ 
+                fontFamily: 'itc-avant-garde-gothic-pro, sans-serif',
+                letterSpacing: 'normal',
+                textDecorationLine: 'none',
+                opacity: 1,
+                fontWeight: 700 // Increased boldness
+              }}
+            >
+              PANTOPIA
+            </h1>
           </header>
 
           {/* Main content of sidebar */}
@@ -105,7 +103,7 @@ export const Desktop = (): JSX.Element => {
                   } transition-colors duration-300`}>
                     {item.icon}
                   </span>
-                  <span className="ml-2 [font-family:'Segoe_UI-Regular',Helvetica] font-normal text-sm tracking-[-0.56px]">
+                  <span className="ml-2 font-normal text-sm tracking-[-0.56px]">
                     {item.label}
                   </span>
                 </Button>
@@ -113,7 +111,7 @@ export const Desktop = (): JSX.Element => {
             </nav>
 
             {/* Account section */}
-            <div className={`mb-2 [font-family:'Segoe_UI-Regular',Helvetica] font-normal ${isDark ? 'text-[#c4c3d1]' : 'text-gray-500'} text-[13px] tracking-[-0.52px] transition-colors duration-300`}>
+            <div className={`mb-2 font-normal ${isDark ? 'text-[#c4c3d1]' : 'text-gray-500'} text-[13px] tracking-[-0.52px] transition-colors duration-300`}>
               Account
             </div>
 
@@ -132,7 +130,7 @@ export const Desktop = (): JSX.Element => {
                   <span className={`${isDark ? "text-neutral-100" : "text-gray-700"} transition-colors duration-300`}>
                     {item.icon}
                   </span>
-                  <span className="ml-2 [font-family:'Segoe_UI-Regular',Helvetica] font-normal text-sm tracking-[-0.56px]">
+                  <span className="ml-2 font-normal text-sm tracking-[-0.56px]">
                     {item.label}
                   </span>
                 </Button>
@@ -157,7 +155,7 @@ export const Desktop = (): JSX.Element => {
                   <span className={`${isDark ? "text-neutral-100" : "text-gray-700"} transition-colors duration-300`}>
                     {item.icon}
                   </span>
-                  <span className="ml-2 [font-family:'Segoe_UI-Regular',Helvetica] font-normal text-sm tracking-[-0.56px]">
+                  <span className="ml-2 font-normal text-sm tracking-[-0.56px]">
                     {item.label}
                   </span>
                 </Button>
@@ -172,7 +170,7 @@ export const Desktop = (): JSX.Element => {
                 ) : (
                   <SunIcon className={`w-4 h-4 ${isDark ? 'text-neutral-100' : 'text-gray-700'} transition-colors duration-300`} />
                 )}
-                <span className={`ml-2 [font-family:'Segoe_UI-Regular',Helvetica] font-normal ${isDark ? 'text-neutral-100' : 'text-gray-700'} text-sm tracking-[-0.56px] transition-colors duration-300`}>
+                <span className={`ml-2 font-normal ${isDark ? 'text-neutral-100' : 'text-gray-700'} text-sm tracking-[-0.56px] transition-colors duration-300`}>
                   {isDark ? 'Dark mode' : 'Light mode'}
                 </span>
               </div>
