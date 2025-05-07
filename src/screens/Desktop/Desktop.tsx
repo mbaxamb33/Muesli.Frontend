@@ -1,13 +1,15 @@
 import {
-  ActivityIcon,
-  ClipboardIcon,
   HelpCircleIcon,
   LogOutIcon,
   MoonIcon,
-  PieChartIcon,
-  RepeatIcon,
   SettingsIcon,
   SunIcon,
+  UsersIcon,
+  BriefcaseIcon,
+  FolderIcon,
+  CheckSquareIcon,
+  CalendarIcon,
+  LayoutDashboardIcon,
 } from "lucide-react";
 import React from "react";
 import { Button } from "../../components/components/button";
@@ -21,30 +23,19 @@ export const Desktop = (): JSX.Element => {
   // Define menu items for better organization and maintainability
   const mainMenuItems = [
     {
-      icon: <PieChartIcon className="w-4 h-4" />,
+      icon: <LayoutDashboardIcon className="w-4 h-4" />,
       label: "Dashboard",
       active: true,
     },
-    { icon: <ActivityIcon className="w-4 h-4" />, label: "Pools" },
-    { icon: <RepeatIcon className="w-4 h-4" />, label: "Swap" },
-  ];
-
-  const accountMenuItems = [
-    {
-      icon: (
-        <img
-          className="w-4 h-4"
-          alt="Group"
-          src="https://c.animaapp.com/macgsy7nnXUdJ6/img/group.png"
-        />
-      ),
-      label: "Portfolio",
-    },
-    { icon: <ClipboardIcon className="w-4 h-4" />, label: "History" },
-    { icon: <SettingsIcon className="w-4 h-4" />, label: "Settings" },
+    { icon: <UsersIcon className="w-4 h-4" />, label: "Clients" },
+    { icon: <BriefcaseIcon className="w-4 h-4" />, label: "Opportunities" },
+    { icon: <FolderIcon className="w-4 h-4" />, label: "Projects" },
+    { icon: <CheckSquareIcon className="w-4 h-4" />, label: "Tasks" },
+    { icon: <CalendarIcon className="w-4 h-4" />, label: "Meetings" },
   ];
 
   const bottomMenuItems = [
+    { icon: <SettingsIcon className="w-4 h-4" />, label: "Settings" },
     { icon: <LogOutIcon className="w-4 h-4" />, label: "Sign out" },
     { icon: <HelpCircleIcon className="w-4 h-4" />, label: "Help" },
   ];
@@ -101,33 +92,6 @@ export const Desktop = (): JSX.Element => {
                       ? isDark ? "text-white" : "text-blue-700"
                       : isDark ? "text-neutral-100" : "text-gray-700"
                   } transition-colors duration-300`}>
-                    {item.icon}
-                  </span>
-                  <span className="ml-2 font-normal text-sm tracking-[-0.56px]">
-                    {item.label}
-                  </span>
-                </Button>
-              ))}
-            </nav>
-
-            {/* Account section */}
-            <div className={`mb-2 font-normal ${isDark ? 'text-[#c4c3d1]' : 'text-gray-500'} text-[13px] tracking-[-0.52px] transition-colors duration-300`}>
-              Account
-            </div>
-
-            {/* Account menu items */}
-            <nav className="mb-8">
-              {accountMenuItems.map((item) => (
-                <Button
-                  key={item.label}
-                  variant="ghost"
-                  className={`w-full mb-3 h-[31px] justify-start px-2 py-1.5 rounded-lg transition-colors duration-300 ${
-                    isDark
-                      ? "text-neutral-100 hover:bg-[#201e3d] hover:text-white"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-blue-700"
-                  }`}
-                >
-                  <span className={`${isDark ? "text-neutral-100" : "text-gray-700"} transition-colors duration-300`}>
                     {item.icon}
                   </span>
                   <span className="ml-2 font-normal text-sm tracking-[-0.56px]">
