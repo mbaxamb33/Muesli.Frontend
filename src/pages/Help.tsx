@@ -1,7 +1,7 @@
 import React from "react";
 import { useTheme } from "../context/ThemeContext";
 
-export const Opportunities = (): JSX.Element => {
+export const Help = (): JSX.Element => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   

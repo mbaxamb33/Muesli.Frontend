@@ -5,6 +5,12 @@ import { AppLayout } from "./layouts/AppLayout";
 import {
   Dashboard,
   Clients,
+  Opportunities,
+  Projects,
+  Tasks,
+  Meetings,
+  Settings,
+  Help
 } from "./pages";
 
 export const App = (): JSX.Element => {
@@ -15,13 +21,12 @@ export const App = (): JSX.Element => {
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="clients" element={<Clients />} />
-            {/* <Route path="opportunities" element={<Opportunities />} />
+            <Route path="opportunities" element={<Opportunities />} />
             <Route path="projects" element={<Projects />} />
             <Route path="tasks" element={<Tasks />} />
             <Route path="meetings" element={<Meetings />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="signout" element={<SignOut />} />
-            <Route path="help" element={<Help />} /> */}
+            <Route path="help" element={<Help />} />
             {/* Redirect to Dashboard for any unmatched routes */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
