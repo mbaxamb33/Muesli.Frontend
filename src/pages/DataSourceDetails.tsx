@@ -8,6 +8,7 @@ import { EditIcon, TrashIcon, ArrowLeftIcon, GlobeIcon, FileIcon, FileTextIcon, 
 import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 import { EditDataSourceSheet } from "../components/EditDataSourceSheet";
 import { Company } from "./Clients";
+import { ModulesSection, Module } from "../components/ModuleSection";
 
 // Sample data sources (in a real app, this would come from an API or global state)
 const initialDataSources: Record<string, DataSource[]> = {
@@ -43,6 +44,44 @@ const initialDataSources: Record<string, DataSource[]> = {
       type: "excel",
       status: "Extracting",
       filename: "financial_report_q1.xlsx"
+    }
+  ]
+};
+
+// Sample modules for data sources
+const initialModules: Record<string, Module[]> = {
+  "ds1": [
+    {
+      id: "m1",
+      title: "Introduction to Tech Innovations",
+      content: "Tech Innovations Inc. is a leading provider of artificial intelligence solutions with a focus on enterprise applications. Founded in 2015, the company has grown to become one of the most innovative players in the AI space. Their core technologies include natural language processing, computer vision, and predictive analytics.",
+      mainIdea: "Company overview and main business focus",
+      crawledAt: "May 11, 2025"
+    },
+    {
+      id: "m2",
+      title: "Product Portfolio",
+      content: "The company offers a range of AI-powered products including:\n\n1. PredictIQ - A predictive analytics platform for business intelligence\n2. VisionSense - Computer vision solutions for manufacturing and quality control\n3. LinguaBot - Enterprise-grade conversational AI assistants\n4. DataMind - Big data processing and insight generation",
+      mainIdea: "Overview of main products and services",
+      crawledAt: "May 11, 2025"
+    }
+  ],
+  "ds2": [
+    {
+      id: "m3",
+      title: "Financial Performance",
+      content: "In the past fiscal year, Tech Innovations Inc. reported revenue growth of 27%, reaching $89.5 million. The company's EBITDA margin improved to 34%, up from 29% in the previous year. R&D investments increased by 15% to $24 million, representing approximately 27% of total revenue.",
+      mainIdea: "Annual financial results and growth metrics",
+      crawledAt: "May 10, 2025"
+    }
+  ],
+  "ds3": [
+    {
+      id: "m4",
+      title: "Sustainable Energy Solutions",
+      content: "Green Energy Solutions is committed to developing innovative renewable energy technologies that reduce carbon emissions and promote sustainability. Their approach combines cutting-edge solar and wind power generation with advanced energy storage solutions to provide reliable clean energy alternatives.",
+      mainIdea: "Company mission and sustainable energy focus",
+      crawledAt: "May 9, 2025"
     }
   ]
 };
@@ -86,7 +125,9 @@ export const DataSourceDetails = (): JSX.Element => {
   
   const [dataSource, setDataSource] = useState<DataSource | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
-  // Removed state variables for edit and delete functionality
+  const [editDataSource, setEditDataSource] = useState<DataSource | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [modules, setModules] = useState<Module[]>([]);
 
   useEffect(() => {
     // Fetch company data
@@ -102,6 +143,13 @@ export const DataSourceDetails = (): JSX.Element => {
       setDataSource(foundDataSource || null);
     }
   }, [companyId, dataSourceId]);
+
+  // Load modules for this data source
+  useEffect(() => {
+    if (dataSourceId) {
+      setModules(initialModules[dataSourceId] || []);
+    }
+  }, [dataSourceId]);
 
   // Generate breadcrumb items
   const breadcrumbItems = React.useMemo(() => {
@@ -127,7 +175,15 @@ export const DataSourceDetails = (): JSX.Element => {
     return items;
   }, [company, dataSource, companyId, dataSourceId]);
 
-  // Removed handleEdit and handleDelete functions
+  const handleEdit = () => {
+    if (dataSource) {
+      setEditDataSource(dataSource);
+    }
+  };
+
+  const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
 
   const confirmDelete = () => {
     // In a real app, this would make an API call to delete the data source
@@ -145,6 +201,17 @@ export const DataSourceDetails = (): JSX.Element => {
   const deleteDataSource = (dataSource: DataSource) => {
     setEditDataSource(null);
     setShowDeleteModal(true);
+  };
+
+  // Module handlers
+  const updateModule = (updatedModule: Module) => {
+    setModules(modules.map(module => 
+      module.id === updatedModule.id ? updatedModule : module
+    ));
+  };
+
+  const deleteModule = (moduleId: string) => {
+    setModules(modules.filter(module => module.id !== moduleId));
   };
 
   // Get icon based on data source type
@@ -368,9 +435,38 @@ export const DataSourceDetails = (): JSX.Element => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Removed Edit Data Source Sheet and Delete Confirmation Modal */}
+        {/* Modules Section */}
+        <div className="mt-8">
+          <ModulesSection 
+            modules={modules}
+            isDark={isDark}
+            onUpdateModule={updateModule}
+            onDeleteModule={deleteModule}
+          />
+        </div>
+
+        {/* Edit Data Source Sheet */}
+        <EditDataSourceSheet
+          dataSource={editDataSource}
+          onUpdate={updateDataSource}
+          onDelete={deleteDataSource}
+          onClose={() => setEditDataSource(null)}
+          open={editDataSource !== null}
+          isDark={isDark}
+        />
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <DeleteConfirmationModal
+            itemName={dataSource.name}
+            itemType="Data Source"
+            onDelete={confirmDelete}
+            onCancel={() => setShowDeleteModal(false)}
+            isDark={isDark}
+          />
+        )}
+      </div>
     </div>
   );
 };
