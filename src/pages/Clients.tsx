@@ -7,6 +7,7 @@ import { ClientsTable } from "../components/ClientsTable";
 import { AddCompanyCard } from "../components/AddCompanyCard";
 import { EditCompanySheet } from "../components/EditCompanySheet";
 import { CompanyCharts } from "../components/CompanyCharts";
+import { Breadcrumb } from "../components/Breadcrumb";
 
 // Sample company data
 export interface Company {
@@ -76,6 +77,14 @@ export const Clients = (): JSX.Element => {
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Custom breadcrumb items for clients page
+  const breadcrumbItems = React.useMemo(() => {
+    return [
+      { label: "Home", path: "/" },
+      { label: "Clients", path: "/clients" }
+    ];
+  }, []);
+
   const addCompany = (company: Omit<Company, "id">) => {
     const newCompany = {
       ...company,
@@ -103,8 +112,11 @@ export const Clients = (): JSX.Element => {
   );
 
   return (
-    <div className={`${isDark ? "bg-[#100e24]" : "bg-gray-100"} flex-1 h-screen p-6 transition-colors duration-300 overflow-y-auto`}>
-      <div className="max-w-7xl mx-auto">
+    <div className={`${isDark ? "bg-[#100e24]" : "bg-gray-100"} flex-1 h-screen transition-colors duration-300 overflow-y-auto`}>
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Custom breadcrumb for clients page */}
+        <Breadcrumb items={breadcrumbItems} />
+
         {/* Header with search and add button */}
         <div className="flex items-center justify-between mb-6">
           <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
