@@ -1,33 +1,28 @@
 import React from "react";
-import { ExternalLinkIcon, EditIcon } from "lucide-react";
-import { Company } from "../pages/Clients";
+import { EditIcon, MailIcon, PhoneIcon } from "lucide-react";
 import { Button } from "./components/button";
 
-
-interface ClientsTableProps {
-  companies: Company[];
-  isDark: boolean;
-  onEditClick: (company: Company) => void;
-  onRowClick: (companyId: string) => void;
+// Define the Contact type
+export interface Contact {
+  id: string;
+  name: string;
+  position: string;
+  email: string;
+  phone: string;
+  notes: string;
 }
 
-export const ClientsTable: React.FC<ClientsTableProps> = ({ 
-  companies, 
-  isDark, 
-  onEditClick,
-  onRowClick 
-}) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return isDark ? 'text-green-400' : 'text-green-600';
-      case 'Inactive': return isDark ? 'text-red-400' : 'text-red-600';
-      case 'Potential': return isDark ? 'text-blue-400' : 'text-blue-600';
-      case 'Onboarding': return isDark ? 'text-yellow-400' : 'text-yellow-600';
-      case 'Suspended': return isDark ? 'text-gray-400' : 'text-gray-600';
-      default: return isDark ? 'text-gray-300' : 'text-gray-500';
-    }
-  };
+interface ContactsTableProps {
+  contacts: Contact[];
+  isDark: boolean;
+  onEditClick: (contact: Contact) => void;
+}
 
+export const ContactsTable: React.FC<ContactsTableProps> = ({ 
+  contacts, 
+  isDark, 
+  onEditClick
+}) => {
   return (
     <div className={`overflow-hidden rounded-lg border ${
       isDark ? "border-[#2e2c50]" : "border-gray-200"
@@ -38,16 +33,19 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({
         }`}>
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Company
+              Name
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Industry
+              Position
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Status
+              Email
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Website
+              Phone
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              Notes
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Actions
@@ -57,69 +55,73 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({
         <tbody className={`${
           isDark ? "bg-[#17162e] divide-[#2e2c50]" : "bg-white divide-gray-200"
         } divide-y`}>
-          {companies.length === 0 ? (
+          {contacts.length === 0 ? (
             <tr>
               <td 
-                colSpan={5} 
+                colSpan={6} 
                 className={`px-6 py-4 text-center text-sm ${
                   isDark ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                No companies found. Add your first company with the button above.
+                No contacts found. Add your first contact with the button above.
               </td>
             </tr>
           ) : (
-            companies.map((company) => (
+            contacts.map((contact) => (
               <tr 
-                key={company.id} 
-                className={`cursor-pointer ${
-                  isDark 
-                    ? "hover:bg-[#201e3d]" 
-                    : "hover:bg-gray-100"
-                }`}
-                onClick={() => onRowClick(company.id)}
+                key={contact.id} 
+                className={isDark ? "hover:bg-[#201e3d]" : "hover:bg-gray-100"}
               >
                 <td 
                   className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
                     isDark ? "text-white" : "text-gray-900"
                   }`}
                 >
-                  {company.name}
+                  {contact.name}
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm ${
                   isDark ? "text-gray-300" : "text-gray-500"
                 }`}>
-                  {company.industry}
-                </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
-                  getStatusColor(company.status)
-                }`}>
-                  {company.status}
+                  {contact.position}
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm ${
                   isDark ? "text-gray-300" : "text-gray-500"
                 }`}>
                   <a 
-                    href={`https://${company.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`mailto:${contact.email}`}
                     className={`flex items-center ${
                       isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
                     }`}
-                    onClick={(e) => e.stopPropagation()}
                   >
-                    {company.website}
-                    <ExternalLinkIcon className="ml-1 w-3 h-3" />
+                    <MailIcon className="w-3.5 h-3.5 mr-1.5" />
+                    {contact.email}
                   </a>
+                </td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                  isDark ? "text-gray-300" : "text-gray-500"
+                }`}>
+                  <a 
+                    href={`tel:${contact.phone}`}
+                    className={`flex items-center ${
+                      isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
+                    }`}
+                  >
+                    <PhoneIcon className="w-3.5 h-3.5 mr-1.5" />
+                    {contact.phone}
+                  </a>
+                </td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                  isDark ? "text-gray-300" : "text-gray-500"
+                }`}>
+                  {contact.notes.length > 30 
+                    ? `${contact.notes.substring(0, 30)}...` 
+                    : contact.notes}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditClick(company);
-                    }}
+                    onClick={() => onEditClick(contact)}
                     className={`${
                       isDark 
                       ? "text-blue-400 hover:bg-[#201e3d] hover:text-blue-300" 

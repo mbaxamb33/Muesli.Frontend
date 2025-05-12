@@ -1,67 +1,59 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./components/button";
-import { Company } from "../pages/Clients";
+import { Contact } from "./ContactsTable";
 import { Sheet } from "./ui/sheet";
 import { TrashIcon } from "lucide-react";
 
-// Reuse the industry options from AddCompanyCard
-const industryOptions = [
-  "Technology",
-  "Finance",
-  "Healthcare",
-  "Education",
-  "Manufacturing",
-  "Retail",
-  "Real Estate",
-  "Media",
-  "Energy",
-  "Transportation",
-  "Agriculture",
-  "Entertainment",
-  "Consulting",
-  "Non-profit",
+// Position options for dropdown
+const positionOptions = [
+  "CEO",
+  "CTO",
+  "CFO",
+  "COO",
+  "Director",
+  "Manager",
+  "Team Lead",
+  "Developer",
+  "Designer",
+  "Marketing Specialist",
+  "Sales Representative",
+  "HR Manager",
+  "Consultant",
+  "Assistant",
   "Other"
 ];
 
-const statusOptions = [
-  "Active",
-  "Inactive",
-  "Potential",
-  "Onboarding",
-  "Suspended"
-];
-
-interface EditCompanySheetProps {
-  company: Company | null;
-  onUpdate: (company: Company) => void;
-  onDelete: (company: Company) => void;
+interface EditContactSheetProps {
+  contact: Contact | null;
+  onUpdate: (contact: Contact) => void;
+  onDelete: (contact: Contact) => void;
   onClose: () => void;
   open: boolean;
   isDark: boolean;
 }
 
-export const EditCompanySheet: React.FC<EditCompanySheetProps> = ({ 
-  company, 
+export const EditContactSheet: React.FC<EditContactSheetProps> = ({ 
+  contact, 
   onUpdate, 
   onDelete,
   onClose, 
   open,
   isDark 
 }) => {
-  const [formData, setFormData] = useState<Company | null>(company);
+  const [formData, setFormData] = useState<Contact | null>(contact);
 
-  // Reset form data when company changes
+  // Reset form data when contact changes
   useEffect(() => {
-    if (company) {
+    if (contact) {
       // Small delay to ensure smooth animation
       const timer = setTimeout(() => {
-        setFormData(company);
+        setFormData(contact);
       }, 50);
       return () => clearTimeout(timer);
     } else {
       setFormData(null);
     }
-  }, [company]);
+  }, [contact]);
 
   if (!formData) return null;
 
@@ -81,16 +73,16 @@ export const EditCompanySheet: React.FC<EditCompanySheetProps> = ({
     <Sheet
       open={open}
       onClose={onClose}
-      title="Edit Company"
+      title="Edit Contact"
       width="450px"
       isDark={isDark}
     >
       <form onSubmit={handleSubmit} className="p-6">
         <div className="grid grid-cols-1 gap-4">
-          {/* Company Name */}
+          {/* Contact Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium mb-1">
-              Company Name*
+              Contact Name*
             </label>
             <input
               type="text"
@@ -109,16 +101,16 @@ export const EditCompanySheet: React.FC<EditCompanySheetProps> = ({
             />
           </div>
 
-          {/* Industry Dropdown */}
+          {/* Position Dropdown */}
           <div>
-            <label htmlFor="industry" className="block text-sm font-medium mb-1">
-              Industry*
+            <label htmlFor="position" className="block text-sm font-medium mb-1">
+              Position*
             </label>
             <select
-              id="industry"
-              name="industry"
+              id="position"
+              name="position"
               required
-              value={formData.industry}
+              value={formData.position}
               onChange={handleChange}
               className={`w-full rounded-lg px-3 py-2 ${
                 isDark 
@@ -128,51 +120,25 @@ export const EditCompanySheet: React.FC<EditCompanySheetProps> = ({
                 isDark ? "focus:ring-blue-500" : "focus:ring-blue-600"
               }`}
             >
-              <option value="" disabled>Select an industry</option>
-              {industryOptions.map(industry => (
-                <option key={industry} value={industry}>{industry}</option>
+              <option value="" disabled>Select a position</option>
+              {positionOptions.map(position => (
+                <option key={position} value={position}>{position}</option>
               ))}
             </select>
           </div>
 
-          {/* Status Dropdown */}
+          {/* Email */}
           <div>
-            <label htmlFor="status" className="block text-sm font-medium mb-1">
-              Status*
-            </label>
-            <select
-              id="status"
-              name="status"
-              required
-              value={formData.status}
-              onChange={handleChange}
-              className={`w-full rounded-lg px-3 py-2 ${
-                isDark 
-                ? "bg-[#201e3d] border-[#2e2c50] text-white" 
-                : "bg-white border-gray-300 text-gray-900"
-              } border focus:outline-none focus:ring-2 ${
-                isDark ? "focus:ring-blue-500" : "focus:ring-blue-600"
-              }`}
-            >
-              <option value="" disabled>Select a status</option>
-              {statusOptions.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Website */}
-          <div>
-            <label htmlFor="website" className="block text-sm font-medium mb-1">
-              Website
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
+              Email*
             </label>
             <input
-              type="text"
-              id="website"
-              name="website"
-              value={formData.website}
+              type="email"
+              id="email"
+              name="email"
+              required
+              value={formData.email}
               onChange={handleChange}
-              placeholder="example.com"
               className={`w-full rounded-lg px-3 py-2 ${
                 isDark 
                 ? "bg-[#201e3d] border-[#2e2c50] text-white" 
@@ -183,16 +149,16 @@ export const EditCompanySheet: React.FC<EditCompanySheetProps> = ({
             />
           </div>
 
-          {/* Address */}
+          {/* Phone */}
           <div>
-            <label htmlFor="address" className="block text-sm font-medium mb-1">
-              Address
+            <label htmlFor="phone" className="block text-sm font-medium mb-1">
+              Phone
             </label>
             <input
-              type="text"
-              id="address"
-              name="address"
-              value={formData.address}
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
               className={`w-full rounded-lg px-3 py-2 ${
                 isDark 
@@ -240,7 +206,7 @@ export const EditCompanySheet: React.FC<EditCompanySheetProps> = ({
             }`}
           >
             <TrashIcon className="w-4 h-4 mr-2" />
-            Delete Company
+            Delete Contact
           </Button>
 
           {/* Action Buttons */}
@@ -265,7 +231,7 @@ export const EditCompanySheet: React.FC<EditCompanySheetProps> = ({
                 : "bg-blue-700 hover:bg-blue-800 text-white"
               }`}
             >
-              Update Company
+              Update Contact
             </Button>
           </div>
         </div>

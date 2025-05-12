@@ -8,6 +8,7 @@ import { AddCompanyCard } from "../components/AddCompanyCard";
 import { EditCompanySheet } from "../components/EditCompanySheet";
 import { CompanyCharts } from "../components/CompanyCharts";
 import { Breadcrumb } from "../components/Breadcrumb";
+import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 
 // Sample company data
 export interface Company {

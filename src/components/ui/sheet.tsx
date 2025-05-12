@@ -48,11 +48,11 @@ export const Sheet = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end">
+    <div className="fixed inset-0 z-40 flex items-start justify-end">
       {/* Backdrop */}
       <div 
         className={cn(
-          "fixed inset-0 bg-black transition-opacity duration-400 ease-out",
+          "fixed inset-0 bg-black transition-opacity duration-400 ease-out z-40",
           open ? "bg-opacity-50 opacity-100" : "bg-opacity-0 opacity-0"
         )}
         onClick={onClose}
@@ -61,7 +61,7 @@ export const Sheet = ({
       {/* Sheet panel */}
       <div
         className={cn(
-          "fixed inset-y-0 right-0 flex flex-col h-full shadow-xl transform transition-all ease-[cubic-bezier(0.32,0.72,0,1)] duration-500",
+          "fixed inset-y-0 right-0 z-40 flex flex-col h-full shadow-xl transform transition-all ease-[cubic-bezier(0.32,0.72,0,1)] duration-500",
           open ? "translate-x-0" : "translate-x-full"
         )}
         style={{ width }}

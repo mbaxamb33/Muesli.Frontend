@@ -5,9 +5,13 @@ import { Company } from "./Clients";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { Button } from "../components/components/button";
 import { PlusIcon } from "lucide-react";
-import { DataSourcesTable, DataSource } from "../components/DatasourcesTable.tsx";
+import { DataSourcesTable, DataSource } from "../components/DatasourcesTable";
 import { AddDataSourceCard } from "../components/AddDataSourceCard";
 import { EditDataSourceSheet } from "../components/EditDataSourceSheet";
+import { ContactsTable, Contact } from "../components/ContactsTable";
+import { AddContactCard } from "../components/AddContactCard";
+import { EditContactSheet } from "../components/EditContactSheet";
+import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 
 // Sample companies (in a real app, this would come from an API or global state)
 const initialCompanies: Company[] = [
@@ -78,14 +82,68 @@ const initialDataSources: Record<string, DataSource[]> = {
   ]
 };
 
+// Sample contacts
+const initialContacts: Record<string, Contact[]> = {
+  "1": [
+    {
+      id: "c1",
+      name: "John Smith",
+      position: "CEO",
+      email: "john.smith@techinnovations.com",
+      phone: "+1 (123) 456-7890",
+      notes: "Primary contact for strategic decisions"
+    },
+    {
+      id: "c2",
+      name: "Jane Doe",
+      position: "CTO",
+      email: "jane.doe@techinnovations.com",
+      phone: "+1 (123) 456-7891",
+      notes: "Technical contact for implementation details"
+    }
+  ],
+  "2": [
+    {
+      id: "c3",
+      name: "Mike Johnson",
+      position: "Director",
+      email: "mike.johnson@greenenergysolutions.com",
+      phone: "+1 (987) 654-3210",
+      notes: "Main point of contact"
+    }
+  ],
+  "3": [
+    {
+      id: "c4",
+      name: "Sarah Williams",
+      position: "CFO",
+      email: "sarah.williams@globalfinance.com",
+      phone: "+1 (555) 123-4567",
+      notes: "Financial discussions and negotiations"
+    }
+  ]
+};
+
+type DeleteItem = {
+  type: 'dataSource' | 'contact';
+  id: string;
+  name: string;
+};
+
 export const CompanyDetails = (): JSX.Element => {
   const { companyId } = useParams<{ companyId: string }>();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [company, setCompany] = useState<Company | null>(null);
   const [dataSources, setDataSources] = useState<DataSource[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  
+  // Modal states
   const [showAddDataSourceCard, setShowAddDataSourceCard] = useState(false);
+  const [showAddContactCard, setShowAddContactCard] = useState(false);
   const [editDataSource, setEditDataSource] = useState<DataSource | null>(null);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [deleteItem, setDeleteItem] = useState<DeleteItem | null>(null);
 
   // Create breadcrumbs directly with the company name when available
   const breadcrumbItems = React.useMemo(() => {
@@ -114,9 +172,10 @@ export const CompanyDetails = (): JSX.Element => {
     // Load data sources for this company
     if (companyId) {
       setDataSources(initialDataSources[companyId] || []);
+      setContacts(initialContacts[companyId] || []);
     }
   }, [companyId]);
-
+// Data source handlers
   const addDataSource = (dataSource: Omit<DataSource, "id">) => {
     const newDataSource = {
       ...dataSource,
@@ -131,6 +190,62 @@ export const CompanyDetails = (): JSX.Element => {
       ds.id === updatedDataSource.id ? updatedDataSource : ds
     ));
     setEditDataSource(null);
+  };
+
+  const deleteDataSource = (dataSource: DataSource) => {
+    // First close the edit sheet
+    setEditDataSource(null);
+    
+    // Small delay to ensure smooth transition
+    setTimeout(() => {
+      setDeleteItem({
+        type: 'dataSource',
+        id: dataSource.id,
+        name: dataSource.name
+      });
+    }, 100);
+  };
+  // Contact handlers
+  const addContact = (contact: Omit<Contact, "id">) => {
+    const newContact = {
+      ...contact,
+      id: Math.random().toString(36).substring(2, 9)
+    };
+    setContacts([...contacts, newContact]);
+    setShowAddContactCard(false);
+  };
+
+  const updateContact = (updatedContact: Contact) => {
+    setContacts(contacts.map(contact => 
+      contact.id === updatedContact.id ? updatedContact : contact
+    ));
+    setEditContact(null);
+  };
+
+  const deleteContact = (contact: Contact) => {
+    // First close the edit sheet
+    setEditContact(null);
+    
+    // Small delay to ensure smooth transition
+    setTimeout(() => {
+      setDeleteItem({
+        type: 'contact',
+        id: contact.id,
+        name: contact.name
+      });
+    }, 100);
+  };
+
+  // Handle confirmation of deletion
+  const handleConfirmDelete = () => {
+    if (!deleteItem) return;
+
+    if (deleteItem.type === 'dataSource') {
+      setDataSources(dataSources.filter(ds => ds.id !== deleteItem.id));
+    } else {
+      setContacts(contacts.filter(contact => contact.id !== deleteItem.id));
+    }
+    setDeleteItem(null);
   };
 
   if (!company) {
@@ -237,6 +352,33 @@ export const CompanyDetails = (): JSX.Element => {
           />
         </div>
 
+        {/* Contacts Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+              Contacts
+            </h2>
+            <Button
+              onClick={() => setShowAddContactCard(true)}
+              className={`${
+                isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
+              }`}
+            >
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Add Contact
+            </Button>
+          </div>
+
+          {/* Contacts Table */}
+          <ContactsTable 
+            contacts={contacts} 
+            isDark={isDark}
+            onEditClick={(contact) => setEditContact(contact)}
+          />
+        </div>
+
+        {/* Modals and Sheets */}
+        
         {/* Add Data Source Card Modal */}
         {showAddDataSourceCard && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
@@ -252,10 +394,43 @@ export const CompanyDetails = (): JSX.Element => {
         <EditDataSourceSheet
           dataSource={editDataSource}
           onUpdate={updateDataSource}
+          onDelete={deleteDataSource}
           onClose={() => setEditDataSource(null)}
           open={editDataSource !== null}
           isDark={isDark}
         />
+
+        {/* Add Contact Card Modal */}
+        {showAddContactCard && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+            <AddContactCard
+              onAdd={addContact}
+              onCancel={() => setShowAddContactCard(false)}
+              isDark={isDark}
+            />
+          </div>
+        )}
+
+        {/* Edit Contact Sheet */}
+        <EditContactSheet
+          contact={editContact}
+          onUpdate={updateContact}
+          onDelete={deleteContact}
+          onClose={() => setEditContact(null)}
+          open={editContact !== null}
+          isDark={isDark}
+        />
+
+        {/* Delete Confirmation Modal */}
+        {deleteItem && (
+          <DeleteConfirmationModal
+            itemName={deleteItem.name}
+            itemType={deleteItem.type === 'dataSource' ? 'Data Source' : 'Contact'}
+            onDelete={handleConfirmDelete}
+            onCancel={() => setDeleteItem(null)}
+            isDark={isDark}
+          />
+        )}
       </div>
     </div>
   );

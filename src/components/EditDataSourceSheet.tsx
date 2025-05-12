@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./components/button";
 import { DataSource } from "./DataSourcesTable";
 import { Sheet } from "./ui/sheet";
-import { Upload, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon, GlobeIcon } from "lucide-react";
+import { Upload, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon, GlobeIcon, TrashIcon } from "lucide-react";
 
 // Data source type options for dropdown
 const typeOptions = [
@@ -27,6 +27,7 @@ const typeIcons = {
 interface EditDataSourceSheetProps {
   dataSource: DataSource | null;
   onUpdate: (dataSource: DataSource) => void;
+  onDelete: (dataSource: DataSource) => void;
   onClose: () => void;
   open: boolean;
   isDark: boolean;
@@ -35,6 +36,7 @@ interface EditDataSourceSheetProps {
 export const EditDataSourceSheet: React.FC<EditDataSourceSheetProps> = ({ 
   dataSource, 
   onUpdate, 
+  onDelete,
   onClose, 
   open,
   isDark 
@@ -337,29 +339,47 @@ export const EditDataSourceSheet: React.FC<EditDataSourceSheetProps> = ({
         </div>
 
         {/* Button Group */}
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-between mt-6">
+          {/* Delete Button */}
           <Button
             type="button"
             variant="outline"
-            onClick={onClose}
+            onClick={() => formData && onDelete(formData)}
             className={`${
               isDark 
-              ? "border-[#2e2c50] text-white hover:bg-[#201e3d]" 
-              : "border-gray-300 text-gray-700 hover:bg-gray-100"
+              ? "border-red-800 bg-red-900/20 text-red-400 hover:bg-red-900/30 hover:text-red-300" 
+              : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
             }`}
           >
-            Cancel
+            <TrashIcon className="w-4 h-4 mr-2" />
+            Delete Data Source
           </Button>
-          <Button
-            type="submit"
-            className={`${
-              isDark 
-              ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" 
-              : "bg-blue-700 hover:bg-blue-800 text-white"
-            }`}
-          >
-            Update Data Source
-          </Button>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className={`${
+                isDark 
+                ? "border-[#2e2c50] text-white hover:bg-[#201e3d]" 
+                : "border-gray-300 text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className={`${
+                isDark 
+                ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" 
+                : "bg-blue-700 hover:bg-blue-800 text-white"
+              }`}
+            >
+              Update Data Source
+            </Button>
+          </div>
         </div>
       </form>
     </Sheet>
