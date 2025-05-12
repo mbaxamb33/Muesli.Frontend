@@ -13,6 +13,7 @@ import {
   Help
 } from "./pages";
 import { CompanyDetails } from "./pages/CompanyDetails";
+import { DataSourceDetails } from "./pages/DataSourceDetails"; // Import the new component
 
 export const App = (): JSX.Element => {
   return (
@@ -23,6 +24,7 @@ export const App = (): JSX.Element => {
             <Route index element={<Dashboard />} />
             <Route path="clients" element={<Clients />} />
             <Route path="clients/:companyId" element={<CompanyDetails />} />
+            <Route path="clients/:companyId/datasources/:dataSourceId" element={<DataSourceDetails />} /> {/* New route */}
             <Route path="opportunities" element={<Opportunities />} />
             <Route path="projects" element={<Projects />} />
             <Route path="tasks" element={<Tasks />} />

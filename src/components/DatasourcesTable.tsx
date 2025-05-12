@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ExternalLinkIcon, EditIcon, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon, GlobeIcon } from "lucide-react";
 import { Button } from "./components/button";
 
@@ -24,6 +25,9 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
   isDark, 
   onEditClick
 }) => {
+  const navigate = useNavigate();
+  const { companyId } = useParams<{ companyId: string }>();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Processed': return isDark ? 'text-green-400' : 'text-green-600';
@@ -44,6 +48,10 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
       case 'txt': return <FileIcon className="w-4 h-4" />;
       default: return <FileIcon className="w-4 h-4" />;
     }
+  };
+
+  const handleRowClick = (dataSourceId: string) => {
+    navigate(`/clients/${companyId}/datasources/${dataSourceId}`);
   };
 
   return (
@@ -90,7 +98,8 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
             dataSources.map((dataSource) => (
               <tr 
                 key={dataSource.id} 
-                className={isDark ? "hover:bg-[#201e3d]" : "hover:bg-gray-100"}
+                className={`cursor-pointer ${isDark ? "hover:bg-[#201e3d]" : "hover:bg-gray-100"}`}
+                onClick={() => handleRowClick(dataSource.id)}
               >
                 <td 
                   className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
@@ -134,7 +143,10 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onEditClick(dataSource)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditClick(dataSource);
+                    }}
                     className={`${
                       isDark 
                       ? "text-blue-400 hover:bg-[#201e3d] hover:text-blue-300" 
