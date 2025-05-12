@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/components/button";
-import { PlusIcon, SearchIcon } from "lucide-react";
+import { PlusIcon, SearchIcon, EditIcon } from "lucide-react";
 import { ClientsTable } from "../components/ClientsTable";
 import { AddCompanyCard } from "../components/AddCompanyCard";
+import { EditCompanyCard } from "../components/EditCompanyCard";
 
 // Sample company data
 export interface Company {
@@ -13,6 +15,7 @@ export interface Company {
   website: string;
   address: string;
   notes: string;
+  status: string;
 }
 
 const initialCompanies: Company[] = [
@@ -23,6 +26,7 @@ const initialCompanies: Company[] = [
     website: "techinnovations.com",
     address: "123 Tech Avenue, Silicon Valley, CA",
     notes: "Leading AI solutions provider",
+    status: "Active",
   },
   {
     id: "2",
@@ -31,6 +35,7 @@ const initialCompanies: Company[] = [
     website: "greenenergysolutions.com",
     address: "456 Renewable Road, Portland, OR",
     notes: "Focused on sustainable energy solutions",
+    status: "Potential",
   },
   {
     id: "3",
@@ -39,14 +44,17 @@ const initialCompanies: Company[] = [
     website: "globalfinance.com",
     address: "789 Wall Street, New York, NY",
     notes: "International investment banking",
+    status: "Active",
   },
 ];
 
 export const Clients = (): JSX.Element => {
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [companies, setCompanies] = useState<Company[]>(initialCompanies);
   const [showAddCard, setShowAddCard] = useState(false);
+  const [showEditCard, setShowEditCard] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const addCompany = (company: Omit<Company, "id">) => {
@@ -56,6 +64,17 @@ export const Clients = (): JSX.Element => {
     };
     setCompanies([...companies, newCompany]);
     setShowAddCard(false);
+  };
+
+  const updateCompany = (updatedCompany: Company) => {
+    setCompanies(companies.map(company => 
+      company.id === updatedCompany.id ? updatedCompany : company
+    ));
+    setShowEditCard(null);
+  };
+
+  const handleCompanyClick = (companyId: string) => {
+    navigate(`/clients/${companyId}`);
   };
 
   const filteredCompanies = companies.filter((company) =>
@@ -100,7 +119,12 @@ export const Clients = (): JSX.Element => {
         </div>
 
         {/* Clients Table */}
-        <ClientsTable companies={filteredCompanies} isDark={isDark} />
+        <ClientsTable 
+          companies={filteredCompanies} 
+          isDark={isDark}
+          onEditClick={(company) => setShowEditCard(company)}
+          onRowClick={handleCompanyClick}
+        />
 
         {/* Add Company Card Modal */}
         {showAddCard && (
@@ -108,6 +132,18 @@ export const Clients = (): JSX.Element => {
             <AddCompanyCard
               onAdd={addCompany}
               onCancel={() => setShowAddCard(false)}
+              isDark={isDark}
+            />
+          </div>
+        )}
+
+        {/* Edit Company Card Modal */}
+        {showEditCard && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+            <EditCompanyCard
+              company={showEditCard}
+              onUpdate={updateCompany}
+              onCancel={() => setShowEditCard(null)}
               isDark={isDark}
             />
           </div>

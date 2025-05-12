@@ -12,6 +12,7 @@ import {
   Settings,
   Help
 } from "./pages";
+import { CompanyDetails } from "./pages/CompanyDetails";
 
 export const App = (): JSX.Element => {
   return (
@@ -21,6 +22,7 @@ export const App = (): JSX.Element => {
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="clients" element={<Clients />} />
+            <Route path="clients/:companyId" element={<CompanyDetails />} />
             <Route path="opportunities" element={<Opportunities />} />
             <Route path="projects" element={<Projects />} />
             <Route path="tasks" element={<Tasks />} />

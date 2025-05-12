@@ -1,5 +1,6 @@
 export { Dashboard } from './Dashboard';
 export { Clients } from './Clients';
+export { CompanyDetails } from './CompanyDetails';
 export { Opportunities } from './Opportunities';
 export { Projects } from './Projects';
 export { Tasks } from './Tasks';
