@@ -19,7 +19,7 @@ export const PageTemplate: React.FC<PageTemplateProps> = ({
   
   return (
     <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 overflow-y-auto`}>
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6 pt-4">
         {/* Breadcrumb */}
         <Breadcrumb items={breadcrumbItems} />
         

@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Company } from "./Clients";
 import { Breadcrumb } from "../components/Breadcrumb";
-import { useBreadcrumbs } from "../hooks/useBreadcrumb";
+import { getBreadcrumbsFromPath } from "../utils/breadcrumb";
 
 // Sample companies (in a real app, this would come from an API or global state)
 const initialCompanies: Company[] = [
@@ -42,12 +42,24 @@ export const CompanyDetails = (): JSX.Element => {
   const isDark = theme === "dark";
   const [company, setCompany] = useState<Company | null>(null);
 
-  // Use our custom hook to get breadcrumbs that resolve dynamic segments
-  const { breadcrumbs, isLoading } = useBreadcrumbs({
-    resolveDynamic: true,
-    // Optionally, we could directly set custom labels if we already have the data
-    customLabels: company ? { [`/clients/${companyId}`]: company.name } : undefined,
-  });
+  // Create breadcrumbs directly with the company name when available
+  const breadcrumbItems = React.useMemo(() => {
+    // Use a simplified approach to create breadcrumbs
+    const baseBreadcrumbs = [
+      { label: "Home", path: "/" },
+      { label: "Clients", path: "/clients" }
+    ];
+    
+    // Add the company name as the last breadcrumb if it's available
+    if (company) {
+      baseBreadcrumbs.push({
+        label: company.name,
+        path: `/clients/${companyId}`
+      });
+    }
+    
+    return baseBreadcrumbs;
+  }, [companyId, company]);
 
   useEffect(() => {
     // In a real app, this would be an API call
@@ -68,8 +80,8 @@ export const CompanyDetails = (): JSX.Element => {
   return (
     <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 overflow-y-auto`}>
       <div className="max-w-7xl mx-auto px-6">
-        {/* Breadcrumb for company details with loading state */}
-        <Breadcrumb items={breadcrumbs} isLoading={isLoading} />
+        {/* Simplified breadcrumb implementation that doesn't rely on async resolution */}
+        <Breadcrumb items={breadcrumbItems} />
         
         {/* Company Header */}
         <div className="mb-6">
