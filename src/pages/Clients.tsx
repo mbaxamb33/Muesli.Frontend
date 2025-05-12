@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/components/button";
-import { PlusIcon, SearchIcon, EditIcon } from "lucide-react";
+import { PlusIcon, SearchIcon } from "lucide-react";
 import { ClientsTable } from "../components/ClientsTable";
 import { AddCompanyCard } from "../components/AddCompanyCard";
-import { EditCompanyCard } from "../components/EditCompanyCard";
+import { EditCompanySheet } from "../components/EditCompanySheet";
 import { CompanyCharts } from "../components/CompanyCharts";
 
 // Sample company data
@@ -73,13 +73,14 @@ export const Clients = (): JSX.Element => {
   const isDark = theme === "dark";
   const [companies, setCompanies] = useState<Company[]>(initialCompanies);
   const [showAddCard, setShowAddCard] = useState(false);
-  const [showEditCard, setShowEditCard] = useState<Company | null>(null);
+  const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const addCompany = (company: Omit<Company, "id">) => {
     const newCompany = {
       ...company,
       id: Math.random().toString(36).substring(2, 9),
+      status: "Active" // Default status for new companies
     };
     setCompanies([...companies, newCompany]);
     setShowAddCard(false);
@@ -89,7 +90,7 @@ export const Clients = (): JSX.Element => {
     setCompanies(companies.map(company => 
       company.id === updatedCompany.id ? updatedCompany : company
     ));
-    setShowEditCard(null);
+    setEditCompany(null);
   };
 
   const handleCompanyClick = (companyId: string) => {
@@ -97,7 +98,8 @@ export const Clients = (): JSX.Element => {
   };
 
   const filteredCompanies = companies.filter((company) =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase())
+    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.industry.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -141,7 +143,7 @@ export const Clients = (): JSX.Element => {
         <ClientsTable 
           companies={filteredCompanies} 
           isDark={isDark}
-          onEditClick={(company) => setShowEditCard(company)}
+          onEditClick={(company) => setEditCompany(company)}
           onRowClick={handleCompanyClick}
         />
 
@@ -159,17 +161,14 @@ export const Clients = (): JSX.Element => {
           </div>
         )}
 
-        {/* Edit Company Card Modal */}
-        {showEditCard && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
-            <EditCompanyCard
-              company={showEditCard}
-              onUpdate={updateCompany}
-              onCancel={() => setShowEditCard(null)}
-              isDark={isDark}
-            />
-          </div>
-        )}
+        {/* Edit Company Sheet */}
+        <EditCompanySheet
+          company={editCompany}
+          onUpdate={updateCompany}
+          onClose={() => setEditCompany(null)}
+          open={editCompany !== null}
+          isDark={isDark}
+        />
       </div>
     </div>
   );

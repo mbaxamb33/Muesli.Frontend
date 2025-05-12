@@ -38,11 +38,16 @@ export const CompanyCharts: React.FC<CompanyChartsProps> = ({ companies }) => {
       .sort((a, b) => b.value - a.value);
   }, [companies]);
 
-  // Style configurations
-  const chartBg = '#100e24';
-  const barColor = '#1a91ff';
-  const textColor = '#ffffff';
-  const chartTextStyle = { fill: textColor, fontSize: 12 };
+  // Style configurations based on theme
+  const chartBg = isDark ? '#100e24' : '#ffffff';
+  const chartBorderColor = isDark ? 'border-gray-800' : 'border-gray-200';
+  const barColor = isDark ? '#1a91ff' : '#3b82f6';
+  const textColor = isDark ? '#ffffff' : '#374151';
+  const labelColor = isDark ? '#f3f4f6' : '#374151';
+  const secondaryTextColor = isDark ? 'text-gray-400' : 'text-gray-500';
+  const tooltipBg = isDark ? '#1e1b4b' : '#f3f4f6';
+  const axisColor = isDark ? '#333' : '#e5e7eb';
+  const chartTextStyle = { fill: labelColor, fontSize: 12 };
   
   // Custom label for pie chart
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }: any) => {
@@ -55,7 +60,7 @@ export const CompanyCharts: React.FC<CompanyChartsProps> = ({ companies }) => {
       <text 
         x={x} 
         y={y} 
-        fill="white" 
+        fill={isDark ? "white" : "#333"} 
         textAnchor={x > cx ? 'start' : 'end'} 
         dominantBaseline="central"
         fontSize={11}
@@ -70,12 +75,12 @@ export const CompanyCharts: React.FC<CompanyChartsProps> = ({ companies }) => {
     <div className="mt-8">
       <div className="grid grid-cols-2 gap-6">
         {/* Industry Distribution - Bar Chart */}
-        <div className="rounded-lg overflow-hidden bg-[#100e24]">
-          <div className="px-6 py-4 border-b border-gray-800">
-            <h2 className="text-white text-lg font-medium">Industry Distribution</h2>
+        <div className={`rounded-lg overflow-hidden ${isDark ? 'bg-[#100e24]' : 'bg-white'}`}>
+          <div className={`px-6 py-4 border-b ${chartBorderColor}`}>
+            <h2 className={`${isDark ? 'text-white' : 'text-gray-800'} text-lg font-medium`}>Industry Distribution</h2>
             <div className="flex justify-between">
-              <p className="text-sm text-gray-400">Total companies by industry</p>
-              <p className="text-sm text-gray-400">Total: {companies.length}</p>
+              <p className={`text-sm ${secondaryTextColor}`}>Total companies by industry</p>
+              <p className={`text-sm ${secondaryTextColor}`}>Total: {companies.length}</p>
             </div>
           </div>
           
@@ -90,7 +95,7 @@ export const CompanyCharts: React.FC<CompanyChartsProps> = ({ companies }) => {
                 <XAxis 
                   dataKey="industry" 
                   tick={chartTextStyle} 
-                  axisLine={{ stroke: '#333' }}
+                  axisLine={{ stroke: axisColor }}
                   tickLine={false}
                   dy={10}
                 />
@@ -101,15 +106,15 @@ export const CompanyCharts: React.FC<CompanyChartsProps> = ({ companies }) => {
                 />
                 <Tooltip
                   contentStyle={{ 
-                    backgroundColor: '#1e1b4b', 
+                    backgroundColor: tooltipBg, 
                     border: 'none',
                     borderRadius: '4px',
-                    color: textColor,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                    color: labelColor,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                   cursor={{ fill: 'transparent' }}
-                  labelStyle={{ color: textColor, fontWeight: 'bold', marginBottom: '5px' }}
-                  itemStyle={{ color: textColor }}
+                  labelStyle={{ color: labelColor, fontWeight: 'bold', marginBottom: '5px' }}
+                  itemStyle={{ color: labelColor }}
                 />
                 <Bar 
                   dataKey="count" 
@@ -124,12 +129,12 @@ export const CompanyCharts: React.FC<CompanyChartsProps> = ({ companies }) => {
         </div>
 
         {/* Status Distribution - Pie Chart */}
-        <div className="rounded-lg overflow-hidden bg-[#100e24]">
-          <div className="px-6 py-4 border-b border-gray-800">
-            <h2 className="text-white text-lg font-medium">Status Distribution</h2>
+        <div className={`rounded-lg overflow-hidden ${isDark ? 'bg-[#100e24]' : 'bg-white'}`}>
+          <div className={`px-6 py-4 border-b ${chartBorderColor}`}>
+            <h2 className={`${isDark ? 'text-white' : 'text-gray-800'} text-lg font-medium`}>Status Distribution</h2>
             <div className="flex justify-between">
-              <p className="text-sm text-gray-400">Total companies by status</p>
-              <p className="text-sm text-gray-400">Total: {companies.length}</p>
+              <p className={`text-sm ${secondaryTextColor}`}>Total companies by status</p>
+              <p className={`text-sm ${secondaryTextColor}`}>Total: {companies.length}</p>
             </div>
           </div>
           
@@ -156,15 +161,15 @@ export const CompanyCharts: React.FC<CompanyChartsProps> = ({ companies }) => {
                 </Pie>
                 <Tooltip
                   contentStyle={{ 
-                    backgroundColor: '#1e1b4b', 
+                    backgroundColor: tooltipBg, 
                     border: 'none',
                     borderRadius: '4px',
-                    color: textColor,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                    color: labelColor,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                   cursor={{ fill: 'transparent' }}
-                  labelStyle={{ color: textColor, fontWeight: 'bold', marginBottom: '5px' }}
-                  itemStyle={{ color: textColor }}
+                  labelStyle={{ color: labelColor, fontWeight: 'bold', marginBottom: '5px' }}
+                  itemStyle={{ color: labelColor }}
                 />
               </PieChart>
             </ResponsiveContainer>
