@@ -1,3 +1,4 @@
+// Update in src/components/DatasourcesTable.tsx
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ExternalLinkIcon, EditIcon, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon, GlobeIcon } from "lucide-react";
@@ -18,15 +19,17 @@ interface DataSourcesTableProps {
   dataSources: DataSource[];
   isDark: boolean;
   onEditClick: (dataSource: DataSource) => void;
+  sourceType?: 'company' | 'contact'; // Add this to determine context
 }
 
 export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({ 
   dataSources, 
   isDark, 
-  onEditClick
+  onEditClick,
+  sourceType = 'company' // Default to company context
 }) => {
   const navigate = useNavigate();
-  const { companyId } = useParams<{ companyId: string }>();
+  const { companyId, contactId } = useParams<{ companyId: string; contactId: string }>();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -51,7 +54,11 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
   };
 
   const handleRowClick = (dataSourceId: string) => {
-    navigate(`/clients/${companyId}/datasources/${dataSourceId}`);
+    if (sourceType === 'company' && companyId) {
+      navigate(`/clients/${companyId}/datasources/${dataSourceId}`);
+    } else if (sourceType === 'contact' && contactId) {
+      navigate(`/contacts/${contactId}/datasources/${dataSourceId}`);
+    }
   };
 
   return (
@@ -59,6 +66,7 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
       isDark ? "border-[#2e2c50]" : "border-gray-200"
     }`}>
       <table className="min-w-full divide-y divide-gray-200">
+        {/* Table content remains the same */}
         <thead className={`${
           isDark ? "bg-[#201e3d] text-gray-300" : "bg-gray-50 text-gray-600"
         }`}>

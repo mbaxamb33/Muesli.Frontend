@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -13,7 +14,9 @@ import {
   Help
 } from "./pages";
 import { CompanyDetails } from "./pages/CompanyDetails";
-import { DataSourceDetails } from "./pages/DataSourceDetails"; // Import the new component
+import { DataSourceDetails } from "./pages/DataSourceDetails";
+import { ContactDetails } from "./pages/ContactDetails";
+import { ContactDataSourceDetails } from "./pages/ContactDatasourceDetails"; // New import
 
 export const App = (): JSX.Element => {
   return (
@@ -24,7 +27,9 @@ export const App = (): JSX.Element => {
             <Route index element={<Dashboard />} />
             <Route path="clients" element={<Clients />} />
             <Route path="clients/:companyId" element={<CompanyDetails />} />
-            <Route path="clients/:companyId/datasources/:dataSourceId" element={<DataSourceDetails />} /> {/* New route */}
+            <Route path="clients/:companyId/datasources/:dataSourceId" element={<DataSourceDetails />} />
+            <Route path="contacts/:contactId" element={<ContactDetails />} />
+            <Route path="contacts/:contactId/datasources/:dataSourceId" element={<ContactDataSourceDetails />} /> {/* New route */}
             <Route path="opportunities" element={<Opportunities />} />
             <Route path="projects" element={<Projects />} />
             <Route path="tasks" element={<Tasks />} />

@@ -1,4 +1,6 @@
+// Updated src/components/ContactsTable.tsx
 import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { EditIcon, MailIcon, PhoneIcon } from "lucide-react";
 import { Button } from "./components/button";
 
@@ -23,6 +25,13 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
   isDark, 
   onEditClick
 }) => {
+  const navigate = useNavigate();
+  const { companyId } = useParams<{ companyId: string }>();
+
+  const handleRowClick = (contactId: string) => {
+    navigate(`/contacts/${contactId}`);
+  };
+
   return (
     <div className={`overflow-hidden rounded-lg border ${
       isDark ? "border-[#2e2c50]" : "border-gray-200"
@@ -70,7 +79,8 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
             contacts.map((contact) => (
               <tr 
                 key={contact.id} 
-                className={isDark ? "hover:bg-[#201e3d]" : "hover:bg-gray-100"}
+                className={`cursor-pointer ${isDark ? "hover:bg-[#201e3d]" : "hover:bg-gray-100"}`}
+                onClick={() => handleRowClick(contact.id)}
               >
                 <td 
                   className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
@@ -92,6 +102,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
                     className={`flex items-center ${
                       isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
                     }`}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <MailIcon className="w-3.5 h-3.5 mr-1.5" />
                     {contact.email}
@@ -105,6 +116,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
                     className={`flex items-center ${
                       isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
                     }`}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <PhoneIcon className="w-3.5 h-3.5 mr-1.5" />
                     {contact.phone}
@@ -121,7 +133,10 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onEditClick(contact)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditClick(contact);
+                    }}
                     className={`${
                       isDark 
                       ? "text-blue-400 hover:bg-[#201e3d] hover:text-blue-300" 
