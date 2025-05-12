@@ -6,6 +6,7 @@ import { PlusIcon, SearchIcon, EditIcon } from "lucide-react";
 import { ClientsTable } from "../components/ClientsTable";
 import { AddCompanyCard } from "../components/AddCompanyCard";
 import { EditCompanyCard } from "../components/EditCompanyCard";
+import { CompanyCharts } from "../components/CompanyCharts";
 
 // Sample company data
 export interface Company {
@@ -46,6 +47,24 @@ const initialCompanies: Company[] = [
     notes: "International investment banking",
     status: "Active",
   },
+  {
+    id: "4",
+    name: "Healthcare Innovations",
+    industry: "Healthcare",
+    website: "healthcareinnovations.com",
+    address: "321 Medical Lane, Boston, MA",
+    notes: "Cutting-edge medical technology",
+    status: "Onboarding",
+  },
+  {
+    id: "5",
+    name: "Retail Revolution",
+    industry: "Retail",
+    website: "retailrevolution.com",
+    address: "654 Shopping Blvd, Chicago, IL",
+    notes: "E-commerce platform",
+    status: "Inactive",
+  }
 ];
 
 export const Clients = (): JSX.Element => {
@@ -125,6 +144,9 @@ export const Clients = (): JSX.Element => {
           onEditClick={(company) => setShowEditCard(company)}
           onRowClick={handleCompanyClick}
         />
+
+        {/* Company Charts */}
+        <CompanyCharts companies={filteredCompanies} />
 
         {/* Add Company Card Modal */}
         {showAddCard && (
