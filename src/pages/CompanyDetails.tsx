@@ -12,117 +12,7 @@ import { ContactsTable, Contact } from "../components/ContactsTable";
 import { AddContactCard } from "../components/AddContactCard";
 import { EditContactSheet } from "../components/EditContactSheet";
 import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
-
-// Sample companies (in a real app, this would come from an API or global state)
-const initialCompanies: Company[] = [
-  {
-    id: "1",
-    name: "Tech Innovations Inc",
-    industry: "Technology",
-    website: "techinnovations.com",
-    address: "123 Tech Avenue, Silicon Valley, CA",
-    notes: "Leading AI solutions provider",
-    status: "Active",
-  },
-  {
-    id: "2",
-    name: "Green Energy Solutions",
-    industry: "Energy",
-    website: "greenenergysolutions.com",
-    address: "456 Renewable Road, Portland, OR",
-    notes: "Focused on sustainable energy solutions",
-    status: "Potential",
-  },
-  {
-    id: "3",
-    name: "Global Finance Group",
-    industry: "Finance",
-    website: "globalfinance.com",
-    address: "789 Wall Street, New York, NY",
-    notes: "International investment banking",
-    status: "Active",
-  },
-];
-
-// Sample data sources
-const initialDataSources: Record<string, DataSource[]> = {
-  "1": [
-    {
-      id: "ds1",
-      name: "Company Website",
-      type: "website",
-      status: "Processed",
-      link: "techinnovations.com"
-    },
-    {
-      id: "ds2",
-      name: "Annual Report 2024",
-      type: "pdf",
-      status: "In queue",
-      filename: "annual_report_2024.pdf"
-    }
-  ],
-  "2": [
-    {
-      id: "ds3",
-      name: "Green Energy Blog",
-      type: "website",
-      status: "Not extracted",
-      link: "blog.greenenergysolutions.com"
-    }
-  ],
-  "3": [
-    {
-      id: "ds4",
-      name: "Financial Report Q1",
-      type: "excel",
-      status: "Extracting",
-      filename: "financial_report_q1.xlsx"
-    }
-  ]
-};
-
-// Sample contacts
-const initialContacts: Record<string, Contact[]> = {
-  "1": [
-    {
-      id: "c1",
-      name: "John Smith",
-      position: "CEO",
-      email: "john.smith@techinnovations.com",
-      phone: "+1 (123) 456-7890",
-      notes: "Primary contact for strategic decisions"
-    },
-    {
-      id: "c2",
-      name: "Jane Doe",
-      position: "CTO",
-      email: "jane.doe@techinnovations.com",
-      phone: "+1 (123) 456-7891",
-      notes: "Technical contact for implementation details"
-    }
-  ],
-  "2": [
-    {
-      id: "c3",
-      name: "Mike Johnson",
-      position: "Director",
-      email: "mike.johnson@greenenergysolutions.com",
-      phone: "+1 (987) 654-3210",
-      notes: "Main point of contact"
-    }
-  ],
-  "3": [
-    {
-      id: "c4",
-      name: "Sarah Williams",
-      position: "CFO",
-      email: "sarah.williams@globalfinance.com",
-      phone: "+1 (555) 123-4567",
-      notes: "Financial discussions and negotiations"
-    }
-  ]
-};
+import { companyAPI, datasourceAPI, contactAPI } from "../services/api";
 
 type DeleteItem = {
   type: 'dataSource' | 'contact';
@@ -134,9 +24,13 @@ export const CompanyDetails = (): JSX.Element => {
   const { companyId } = useParams<{ companyId: string }>();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  
+  // State variables
   const [company, setCompany] = useState<Company | null>(null);
   const [dataSources, setDataSources] = useState<DataSource[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Modal states
   const [showAddDataSourceCard, setShowAddDataSourceCard] = useState(false);
@@ -147,13 +41,11 @@ export const CompanyDetails = (): JSX.Element => {
 
   // Create breadcrumbs directly with the company name when available
   const breadcrumbItems = React.useMemo(() => {
-    // Use a simplified approach to create breadcrumbs
     const baseBreadcrumbs = [
       { label: "Home", path: "/" },
       { label: "Clients", path: "/clients" }
     ];
     
-    // Add the company name as the last breadcrumb if it's available
     if (company) {
       baseBreadcrumbs.push({
         label: company.name,
@@ -164,91 +56,228 @@ export const CompanyDetails = (): JSX.Element => {
     return baseBreadcrumbs;
   }, [companyId, company]);
 
+  // Fetch company data from the backend
   useEffect(() => {
-    // In a real app, this would be an API call
-    const foundCompany = initialCompanies.find(c => c.id === companyId);
-    setCompany(foundCompany || null);
-    
-    // Load data sources for this company
-    if (companyId) {
-      setDataSources(initialDataSources[companyId] || []);
-      setContacts(initialContacts[companyId] || []);
-    }
-  }, [companyId]);
-// Data source handlers
-  const addDataSource = (dataSource: Omit<DataSource, "id">) => {
-    const newDataSource = {
-      ...dataSource,
-      id: Math.random().toString(36).substring(2, 9)
+    const fetchCompanyData = async () => {
+      if (!companyId) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch company details
+        const companyData = await companyAPI.getCompanyById(companyId);
+        setCompany(companyData);
+        
+        // Fetch company datasources
+        const dataSources = await datasourceAPI.getCompanyDatasources(companyId);
+        setDataSources(dataSources);
+        
+        // Fetch company contacts
+        const contacts = await contactAPI.getCompanyContacts(companyId);
+        setContacts(contacts);
+      } catch (error) {
+        console.error("Error fetching company data:", error);
+        setError("Failed to load company details. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setDataSources([...dataSources, newDataSource]);
-    setShowAddDataSourceCard(false);
+    
+    fetchCompanyData();
+  }, [companyId]);
+
+  // DataSource handlers
+  const addDataSource = async (dataSource: Omit<DataSource, "id">) => {
+    if (!companyId) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Add datasource to company in the backend
+      const newDataSource = await datasourceAPI.createCompanyDatasource(companyId, dataSource);
+      
+      // Update local state
+      setDataSources([...dataSources, newDataSource]);
+      
+      // Close the add form
+      setShowAddDataSourceCard(false);
+    } catch (error) {
+      console.error("Failed to add datasource:", error);
+      setError("Failed to add datasource. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateDataSource = (updatedDataSource: DataSource) => {
-    setDataSources(dataSources.map(ds => 
-      ds.id === updatedDataSource.id ? updatedDataSource : ds
-    ));
-    setEditDataSource(null);
+  const updateDataSource = async (updatedDataSource: DataSource) => {
+    if (!companyId) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Update datasource in the backend
+      await datasourceAPI.updateDatasource(companyId, updatedDataSource);
+      
+      // Update local state
+      setDataSources(dataSources.map(ds => 
+        ds.id === updatedDataSource.id ? updatedDataSource : ds
+      ));
+      
+      // Close the edit form
+      setEditDataSource(null);
+    } catch (error) {
+      console.error("Failed to update datasource:", error);
+      setError("Failed to update datasource. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deleteDataSource = (dataSource: DataSource) => {
     // First close the edit sheet
     setEditDataSource(null);
     
-    // Small delay to ensure smooth transition
-    setTimeout(() => {
-      setDeleteItem({
-        type: 'dataSource',
-        id: dataSource.id,
-        name: dataSource.name
-      });
-    }, 100);
-  };
-  // Contact handlers
-  const addContact = (contact: Omit<Contact, "id">) => {
-    const newContact = {
-      ...contact,
-      id: Math.random().toString(36).substring(2, 9)
-    };
-    setContacts([...contacts, newContact]);
-    setShowAddContactCard(false);
+    // Show delete confirmation modal
+    setDeleteItem({
+      type: 'dataSource',
+      id: dataSource.id,
+      name: dataSource.name
+    });
   };
 
-  const updateContact = (updatedContact: Contact) => {
-    setContacts(contacts.map(contact => 
-      contact.id === updatedContact.id ? updatedContact : contact
-    ));
-    setEditContact(null);
+  // Contact handlers
+  const addContact = async (contact: Omit<Contact, "id">) => {
+    if (!companyId) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Add contact to company in the backend
+      const newContact = await contactAPI.createContact(companyId, contact);
+      
+      // Update local state
+      setContacts([...contacts, newContact]);
+      
+      // Close the add form
+      setShowAddContactCard(false);
+    } catch (error) {
+      console.error("Failed to add contact:", error);
+      setError("Failed to add contact. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateContact = async (updatedContact: Contact) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Update contact in the backend
+      await contactAPI.updateContact(updatedContact);
+      
+      // Update local state
+      setContacts(contacts.map(contact => 
+        contact.id === updatedContact.id ? updatedContact : contact
+      ));
+      
+      // Close the edit form
+      setEditContact(null);
+    } catch (error) {
+      console.error("Failed to update contact:", error);
+      setError("Failed to update contact. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deleteContact = (contact: Contact) => {
     // First close the edit sheet
     setEditContact(null);
     
-    // Small delay to ensure smooth transition
-    setTimeout(() => {
-      setDeleteItem({
-        type: 'contact',
-        id: contact.id,
-        name: contact.name
-      });
-    }, 100);
+    // Show delete confirmation modal
+    setDeleteItem({
+      type: 'contact',
+      id: contact.id,
+      name: contact.name
+    });
   };
 
   // Handle confirmation of deletion
-  const handleConfirmDelete = () => {
-    if (!deleteItem) return;
-
-    if (deleteItem.type === 'dataSource') {
-      setDataSources(dataSources.filter(ds => ds.id !== deleteItem.id));
-    } else {
-      setContacts(contacts.filter(contact => contact.id !== deleteItem.id));
+  const handleConfirmDelete = async () => {
+    if (!deleteItem || !companyId) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      if (deleteItem.type === 'dataSource') {
+        // Delete datasource from the backend
+        await datasourceAPI.deleteCompanyDatasource(companyId, deleteItem.id);
+        
+        // Update local state
+        setDataSources(dataSources.filter(ds => ds.id !== deleteItem.id));
+      } else {
+        // Delete contact from the backend
+        await contactAPI.deleteContact(deleteItem.id);
+        
+        // Update local state
+        setContacts(contacts.filter(contact => contact.id !== deleteItem.id));
+      }
+    } catch (error) {
+      console.error(`Failed to delete ${deleteItem.type}:`, error);
+      setError(`Failed to delete ${deleteItem.type}. Please try again.`);
+    } finally {
+      // Close the delete confirmation modal
+      setDeleteItem(null);
+      setIsLoading(false);
     }
-    setDeleteItem(null);
   };
 
-  if (!company) {
+  // Loading state
+  if (isLoading && !company) {
+    return (
+      <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
+        <div className="flex items-center space-x-2">
+          <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
+            Loading company details...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !company) {
+    return (
+      <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
+        <div className="text-center">
+          <div className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>
+            {error}
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className={`${
+              isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
+            }`}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
+  if (!company && !isLoading) {
     return (
       <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen p-6 transition-colors duration-300 flex items-center justify-center`}>
         <p className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -261,18 +290,29 @@ export const CompanyDetails = (): JSX.Element => {
   return (
     <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 overflow-y-auto`}>
       <div className="max-w-7xl mx-auto px-6">
-        {/* Simplified breadcrumb implementation that doesn't rely on async resolution */}
+        {/* Breadcrumb navigation */}
         <Breadcrumb items={breadcrumbItems} />
         
         {/* Company Header */}
         <div className="mb-6">
           <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            {company.name}
+            {company?.name}
           </h1>
           <div className={`mt-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-            {company.industry} | {company.status}
+            {company?.industry} | {company?.status}
           </div>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div className={`rounded-lg border-l-4 p-4 mb-6 ${
+            isDark 
+            ? "bg-red-900/30 border-red-500 text-red-300" 
+            : "bg-red-50 border-red-500 text-red-700"
+          }`}>
+            <p>{error}</p>
+          </div>
+        )}
 
         {/* Company Details Card */}
         <div className={`rounded-lg shadow-md p-6 mb-8 ${
@@ -291,22 +331,26 @@ export const CompanyDetails = (): JSX.Element => {
                   <span className={`block text-sm font-medium ${
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`}>Website</span>
-                  <a 
-                    href={`https://${company.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${
-                      isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'
-                    }`}
-                  >
-                    {company.website}
-                  </a>
+                  {company?.website ? (
+                    <a 
+                      href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${
+                        isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'
+                      }`}
+                    >
+                      {company.website}
+                    </a>
+                  ) : (
+                    <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>-</span>
+                  )}
                 </div>
                 <div>
                   <span className={`block text-sm font-medium ${
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`}>Address</span>
-                  <p>{company.address}</p>
+                  <p>{company?.address || '-'}</p>
                 </div>
               </div>
             </div>
@@ -321,7 +365,7 @@ export const CompanyDetails = (): JSX.Element => {
               <p className={`${
                 isDark ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                {company.notes || 'No additional notes'}
+                {company?.notes || 'No additional notes'}
               </p>
             </div>
           </div>
@@ -338,6 +382,7 @@ export const CompanyDetails = (): JSX.Element => {
               className={`${
                 isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
               }`}
+              disabled={isLoading}
             >
               <PlusIcon className="w-4 h-4 mr-2" />
               Add Data Source
@@ -345,11 +390,24 @@ export const CompanyDetails = (): JSX.Element => {
           </div>
 
           {/* Data Sources Table */}
-          <DataSourcesTable 
-            dataSources={dataSources} 
-            isDark={isDark}
-            onEditClick={(dataSource) => setEditDataSource(dataSource)}
-          />
+          {isLoading && dataSources.length === 0 ? (
+            <div className={`flex justify-center items-center p-8 rounded-lg border ${
+              isDark ? "border-[#2e2c50] bg-[#17162e] text-gray-300" : "border-gray-200 bg-white text-gray-500"
+            }`}>
+              <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Loading data sources...
+            </div>
+          ) : (
+            <DataSourcesTable 
+              dataSources={dataSources} 
+              isDark={isDark}
+              onEditClick={(dataSource) => setEditDataSource(dataSource)}
+              sourceType="company"
+            />
+          )}
         </div>
 
         {/* Contacts Section */}
@@ -363,6 +421,7 @@ export const CompanyDetails = (): JSX.Element => {
               className={`${
                 isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
               }`}
+              disabled={isLoading}
             >
               <PlusIcon className="w-4 h-4 mr-2" />
               Add Contact
@@ -370,11 +429,23 @@ export const CompanyDetails = (): JSX.Element => {
           </div>
 
           {/* Contacts Table */}
-          <ContactsTable 
-            contacts={contacts} 
-            isDark={isDark}
-            onEditClick={(contact) => setEditContact(contact)}
-          />
+          {isLoading && contacts.length === 0 ? (
+            <div className={`flex justify-center items-center p-8 rounded-lg border ${
+              isDark ? "border-[#2e2c50] bg-[#17162e] text-gray-300" : "border-gray-200 bg-white text-gray-500"
+            }`}>
+              <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Loading contacts...
+            </div>
+          ) : (
+            <ContactsTable 
+              contacts={contacts} 
+              isDark={isDark}
+              onEditClick={(contact) => setEditContact(contact)}
+            />
+          )}
         </div>
 
         {/* Modals and Sheets */}

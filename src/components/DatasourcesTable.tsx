@@ -1,4 +1,3 @@
-// Updated src/components/DatasourcesTable.tsx
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ExternalLinkIcon, EditIcon, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon, GlobeIcon } from "lucide-react";
@@ -12,7 +11,6 @@ export interface DataSource {
   status: "Not extracted" | "In queue" | "Extracting" | "Processed";
   link?: string;
   filename?: string;
-  fileData?: string;
 }
 
 interface DataSourcesTableProps {
@@ -39,6 +37,34 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
       case 'Extracting': return isDark ? 'text-yellow-400' : 'text-yellow-600';
       default: return isDark ? 'text-gray-300' : 'text-gray-500';
     }
+  };
+
+  const getStatusBadge = (status: string) => {
+    // Get background colors based on status
+    let bgColor = '';
+    
+    switch (status) {
+      case 'Processed': 
+        bgColor = isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800';
+        break;
+      case 'Not extracted': 
+        bgColor = isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
+        break;
+      case 'In queue': 
+        bgColor = isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800';
+        break;
+      case 'Extracting': 
+        bgColor = isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800';
+        break;
+      default: 
+        bgColor = isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
+    }
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bgColor}`}>
+        {status}
+      </span>
+    );
   };
 
   const getTypeIcon = (type: string) => {
@@ -68,7 +94,6 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
       isDark ? "border-[#2e2c50]" : "border-gray-200"
     }`}>
       <table className="min-w-full divide-y divide-gray-200">
-        {/* Table content remains the same */}
         <thead className={`${
           isDark ? "bg-[#201e3d] text-gray-300" : "bg-gray-50 text-gray-600"
         }`}>
@@ -124,10 +149,8 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
                   <span className="mr-2">{getTypeIcon(dataSource.type)}</span>
                   {dataSource.type.charAt(0).toUpperCase() + dataSource.type.slice(1)}
                 </td>
-                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
-                  getStatusColor(dataSource.status)
-                }`}>
-                  {dataSource.status}
+                <td className={`px-6 py-4 whitespace-nowrap text-sm`}>
+                  {getStatusBadge(dataSource.status)}
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm ${
                   isDark ? "text-gray-300" : "text-gray-500"
