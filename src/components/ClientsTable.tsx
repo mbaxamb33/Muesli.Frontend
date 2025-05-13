@@ -3,7 +3,6 @@ import { ExternalLinkIcon, EditIcon } from "lucide-react";
 import { Company } from "../pages/Clients";
 import { Button } from "./components/button";
 
-
 interface ClientsTableProps {
   companies: Company[];
   isDark: boolean;
@@ -26,6 +25,22 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({
       case 'Suspended': return isDark ? 'text-gray-400' : 'text-gray-600';
       default: return isDark ? 'text-gray-300' : 'text-gray-500';
     }
+  };
+
+  // Format website URLs properly for display and links
+  const formatWebsite = (website: string): string => {
+    if (!website) return '';
+    
+    // Remove any http:// or https:// prefixes for display
+    return website.replace(/^https?:\/\//, '');
+  };
+
+  // Get proper URL with protocol for href attribute
+  const getWebsiteUrl = (website: string): string => {
+    if (!website) return '#';
+    
+    // Add https:// if no protocol specified
+    return website.startsWith('http') ? website : `https://${website}`;
   };
 
   return (
@@ -99,18 +114,22 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({
                 <td className={`px-6 py-4 whitespace-nowrap text-sm ${
                   isDark ? "text-gray-300" : "text-gray-500"
                 }`}>
-                  <a 
-                    href={`https://${company.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center ${
-                      isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
-                    }`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {company.website}
-                    <ExternalLinkIcon className="ml-1 w-3 h-3" />
-                  </a>
+                  {company.website ? (
+                    <a 
+                      href={getWebsiteUrl(company.website)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex items-center ${
+                        isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
+                      }`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {formatWebsite(company.website)}
+                      <ExternalLinkIcon className="ml-1 w-3 h-3" />
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <Button
