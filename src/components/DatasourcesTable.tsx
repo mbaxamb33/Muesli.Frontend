@@ -1,4 +1,4 @@
-// Update in src/components/DatasourcesTable.tsx
+// Updated src/components/DatasourcesTable.tsx
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ExternalLinkIcon, EditIcon, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon, GlobeIcon } from "lucide-react";
@@ -19,7 +19,7 @@ interface DataSourcesTableProps {
   dataSources: DataSource[];
   isDark: boolean;
   onEditClick: (dataSource: DataSource) => void;
-  sourceType?: 'company' | 'contact'; // Add this to determine context
+  sourceType?: 'company' | 'contact' | 'project'; // Add project type
 }
 
 export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({ 
@@ -29,7 +29,7 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
   sourceType = 'company' // Default to company context
 }) => {
   const navigate = useNavigate();
-  const { companyId, contactId } = useParams<{ companyId: string; contactId: string }>();
+  const { companyId, contactId, projectId } = useParams<{ companyId: string; contactId: string; projectId: string }>();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -58,6 +58,8 @@ export const DataSourcesTable: React.FC<DataSourcesTableProps> = ({
       navigate(`/clients/${companyId}/datasources/${dataSourceId}`);
     } else if (sourceType === 'contact' && contactId) {
       navigate(`/contacts/${contactId}/datasources/${dataSourceId}`);
+    } else if (sourceType === 'project' && projectId) {
+      navigate(`/projects/${projectId}/datasources/${dataSourceId}`);
     }
   };
 

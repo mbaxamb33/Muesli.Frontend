@@ -1,4 +1,4 @@
-// src/App.tsx
+// src/App.tsx (updated)
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -14,9 +14,17 @@ import {
   Help
 } from "./pages";
 import { CompanyDetails } from "./pages/CompanyDetails";
+import { ProjectDetails } from "./pages/ProjectDetails";
 import { DataSourceDetails } from "./pages/DataSourceDetails";
 import { ContactDetails } from "./pages/ContactDetails";
-import { ContactDataSourceDetails } from "./pages/ContactDatasourceDetails"; // New import
+import { ContactDataSourceDetails } from "./pages/ContactDatasourceDetails";
+import { ProjectDataSourceDetails } from "./pages/ProjectDatasourceDetails";
+
+// Main application component
+// This component sets up the routing for the application
+// and wraps the application in a theme provider for consistent styling
+// It uses React Router for navigation and defines the main layout
+// for the application
 
 export const App = (): JSX.Element => {
   return (
@@ -29,9 +37,12 @@ export const App = (): JSX.Element => {
             <Route path="clients/:companyId" element={<CompanyDetails />} />
             <Route path="clients/:companyId/datasources/:dataSourceId" element={<DataSourceDetails />} />
             <Route path="contacts/:contactId" element={<ContactDetails />} />
-            <Route path="contacts/:contactId/datasources/:dataSourceId" element={<ContactDataSourceDetails />} /> {/* New route */}
+            <Route path="contacts/:contactId/datasources/:dataSourceId" element={<ContactDataSourceDetails />} />
             <Route path="opportunities" element={<Opportunities />} />
             <Route path="projects" element={<Projects />} />
+            <Route path="projects/:projectId" element={<ProjectDetails />} />
+            <Route path="projects/:projectId/datasources/:dataSourceId" element={<ProjectDataSourceDetails />} />
+
             <Route path="tasks" element={<Tasks />} />
             <Route path="meetings" element={<Meetings />} />
             <Route path="settings" element={<Settings />} />
