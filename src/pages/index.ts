@@ -1,4 +1,4 @@
-// src/pages/index.ts (updated)
+// src/pages/index.ts
 export { Dashboard } from './Dashboard';
 export { Clients } from './Clients';
 export { CompanyDetails } from './CompanyDetails';
@@ -13,4 +13,3 @@ export { Meetings } from './Meetings';
 export { Settings } from './Settings';
 export { Help } from './Help';
 export { ProjectDataSourceDetails } from './ProjectDatasourceDetails';
-

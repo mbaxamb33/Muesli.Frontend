@@ -12,6 +12,62 @@ const api = axios.create({
   },
 });
 
+
+
+// First, let's update the datasourceAPI in src/services/api.ts to add paragraph functionality
+const paragraphAPI = {
+  // Get all paragraphs for a datasource
+  getDataSourceParagraphs: async (datasourceId: string): Promise<Module[]> => {
+    try {
+      const response = await api.get(`/paragraphs/datasource/${datasourceId}`);
+      
+      // Map the backend response to our frontend Module type
+      return response.data.map((paragraph: any) => ({
+        id: paragraph.paragraph_id.toString(),
+        title: paragraph.title || 'Untitled Paragraph',
+        content: paragraph.content,
+        mainIdea: paragraph.main_idea || '',
+        crawledAt: paragraph.created_at ? new Date(paragraph.created_at).toLocaleDateString() : 'Unknown'
+      }));
+    } catch (error) {
+      console.error('Error fetching paragraphs:', error);
+      throw error;
+    }
+  },
+  
+  // Update a paragraph
+  updateParagraph: async (paragraph: Module): Promise<Module> => {
+    try {
+      const payload = {
+        title: paragraph.title,
+        content: paragraph.content,
+        main_idea: paragraph.mainIdea
+      };
+      
+      await api.put(`/paragraphs/${paragraph.id}`, payload);
+      
+      return paragraph;
+    } catch (error) {
+      console.error('Error updating paragraph:', error);
+      throw error;
+    }
+  },
+  
+  // Delete a paragraph
+  deleteParagraph: async (paragraphId: string): Promise<void> => {
+    try {
+      await api.delete(`/paragraphs/${paragraphId}`);
+    } catch (error) {
+      console.error('Error deleting paragraph:', error);
+      throw error;
+    }
+  }
+};
+
+// Export the new API
+export { paragraphAPI };
+
+
 // Company API endpoints
 export const companyAPI = {
   // Get all companies
