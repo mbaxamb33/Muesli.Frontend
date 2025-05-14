@@ -1,7 +1,9 @@
+// Updated ModuleSection.tsx
 import React, { useState, useEffect } from "react";
 import { Button } from "./components/button";
 import { EditIcon, TrashIcon, CheckIcon, XIcon } from "lucide-react";
 import { DeleteModuleConfirmationModal } from "./DeleteModuleConfirmationModal";
+import { Module } from "../types/module";
 
 // CSS styles for smooth transitions
 const styles = {
@@ -25,15 +27,6 @@ const styles = {
     transform: "translateY(-10px)",
   }
 };
-
-// Define the Module type
-export interface Module {
-  id: string;
-  title: string;
-  content: string;
-  mainIdea: string;
-  crawledAt: string;
-}
 
 interface ModulesSectionProps {
   modules: Module[];
@@ -143,12 +136,6 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-          Modules
-        </h2>
-      </div>
-
       <div className={`overflow-hidden rounded-lg border ${
         isDark ? "border-[#2e2c50]" : "border-gray-200"
       }`}>

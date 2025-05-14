@@ -1,8 +1,7 @@
 // src/services/api.ts
 import axios from 'axios';
-import { Company } from '../pages/Clients';
-import { DataSource } from '../components/DatasourcesTable';
-import { Contact } from '../components/ContactsTable';
+import { Module } from '../types/module';
+import { DATASOURCE_ROUTES, PARAGRAPH_ROUTES, COMPANY_ROUTES, CONTACT_ROUTES } from '../api/api-routes';
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -12,68 +11,43 @@ const api = axios.create({
   },
 });
 
+// Company type definition
+export interface Company {
+  id: string;
+  name: string;
+  industry: string;
+  website: string;
+  address: string;
+  notes: string;
+  status: string;
+}
 
+// DataSource type definition
+export interface DataSource {
+  id: string;
+  name: string;
+  type: "website" | "audio" | "word" | "pdf" | "excel" | "txt";
+  status: "Not extracted" | "In queue" | "Extracting" | "Processed";
+  link?: string;
+  filename?: string;
+}
 
-// First, let's update the datasourceAPI in src/services/api.ts to add paragraph functionality
-const paragraphAPI = {
-  // Get all paragraphs for a datasource
-  getDataSourceParagraphs: async (datasourceId: string): Promise<Module[]> => {
-    try {
-      const response = await api.get(`/paragraphs/datasource/${datasourceId}`);
-      
-      // Map the backend response to our frontend Module type
-      return response.data.map((paragraph: any) => ({
-        id: paragraph.paragraph_id.toString(),
-        title: paragraph.title || 'Untitled Paragraph',
-        content: paragraph.content,
-        mainIdea: paragraph.main_idea || '',
-        crawledAt: paragraph.created_at ? new Date(paragraph.created_at).toLocaleDateString() : 'Unknown'
-      }));
-    } catch (error) {
-      console.error('Error fetching paragraphs:', error);
-      throw error;
-    }
-  },
-  
-  // Update a paragraph
-  updateParagraph: async (paragraph: Module): Promise<Module> => {
-    try {
-      const payload = {
-        title: paragraph.title,
-        content: paragraph.content,
-        main_idea: paragraph.mainIdea
-      };
-      
-      await api.put(`/paragraphs/${paragraph.id}`, payload);
-      
-      return paragraph;
-    } catch (error) {
-      console.error('Error updating paragraph:', error);
-      throw error;
-    }
-  },
-  
-  // Delete a paragraph
-  deleteParagraph: async (paragraphId: string): Promise<void> => {
-    try {
-      await api.delete(`/paragraphs/${paragraphId}`);
-    } catch (error) {
-      console.error('Error deleting paragraph:', error);
-      throw error;
-    }
-  }
-};
-
-// Export the new API
-export { paragraphAPI };
-
+// Contact type definition
+export interface Contact {
+  id: string;
+  name: string;
+  position: string;
+  email: string;
+  phone: string;
+  notes: string;
+}
 
 // Company API endpoints
 export const companyAPI = {
   // Get all companies
   getAllCompanies: async (): Promise<Company[]> => {
     try {
-      const response = await api.get('/companies');
+      const response = await axios.get(COMPANY_ROUTES.getAllCompanies());
       
       // Map the backend response to our frontend Company type
       return response.data.map((company: any) => ({
@@ -94,7 +68,7 @@ export const companyAPI = {
   // Get company by ID
   getCompanyById: async (id: string): Promise<Company> => {
     try {
-      const response = await api.get(`/companies/${id}`);
+      const response = await axios.get(COMPANY_ROUTES.getCompanyById(id));
       
       // Map the backend response to our frontend Company type
       return {
@@ -125,7 +99,7 @@ export const companyAPI = {
         status: company.status || 'Active'
       };
       
-      const response = await api.post('/companies', payload);
+      const response = await axios.post(COMPANY_ROUTES.createCompany(), payload);
       
       // Return the created company with the ID from the response
       return {
@@ -156,7 +130,7 @@ export const companyAPI = {
         status: company.status || 'Active'
       };
       
-      const response = await api.put(`/companies/${company.id}`, payload);
+      const response = await axios.put(COMPANY_ROUTES.updateCompany(company.id), payload);
       
       // Return the updated company
       return {
@@ -177,7 +151,7 @@ export const companyAPI = {
   // Delete a company
   deleteCompany: async (id: string): Promise<void> => {
     try {
-      await api.delete(`/companies/${id}`);
+      await axios.delete(COMPANY_ROUTES.deleteCompany(id));
     } catch (error) {
       console.error(`Error deleting company with ID ${id}:`, error);
       throw error;
@@ -190,7 +164,7 @@ export const datasourceAPI = {
   // Get all datasources for a company
   getCompanyDatasources: async (companyId: string): Promise<DataSource[]> => {
     try {
-      const response = await api.get(`/companies/${companyId}/datasources`);
+      const response = await axios.get(DATASOURCE_ROUTES.getCompanyDataSources(companyId));
       
       // Map the backend response to our frontend DataSource type
       return response.data.map((datasource: any) => ({
@@ -210,7 +184,7 @@ export const datasourceAPI = {
   // Get all datasources for a contact
   getContactDatasources: async (contactId: string): Promise<DataSource[]> => {
     try {
-      const response = await api.get(`/contacts/${contactId}/datasources`);
+      const response = await axios.get(DATASOURCE_ROUTES.getContactDataSources(contactId));
       
       // Map the backend response to our frontend DataSource type
       return response.data.map((datasource: any) => ({
@@ -237,7 +211,7 @@ export const datasourceAPI = {
         file_name: datasource.type !== 'website' ? datasource.filename : ''
       };
       
-      const response = await api.post(`/companies/${companyId}/datasources`, payload);
+      const response = await axios.post(DATASOURCE_ROUTES.createCompanyDataSource(companyId), payload);
       
       return {
         id: response.data.datasource_id.toString(),
@@ -253,32 +227,6 @@ export const datasourceAPI = {
     }
   },
   
-  // Create a new datasource for a contact
-  createContactDatasource: async (contactId: string, datasource: Omit<DataSource, 'id'>): Promise<DataSource> => {
-    try {
-      const payload = {
-        source_type: datasource.type,
-        name: datasource.name,
-        link: datasource.type === 'website' ? datasource.link : '',
-        file_name: datasource.type !== 'website' ? datasource.filename : ''
-      };
-      
-      const response = await api.post(`/contacts/${contactId}/datasources`, payload);
-      
-      return {
-        id: response.data.datasource_id.toString(),
-        name: datasource.name,
-        type: datasource.type,
-        status: 'Not extracted',
-        link: datasource.link || '',
-        filename: datasource.filename || ''
-      };
-    } catch (error) {
-      console.error('Error creating contact datasource:', error);
-      throw error;
-    }
-  },
-  
   // Update a datasource for a company
   updateDatasource: async (companyId: string, datasource: DataSource): Promise<DataSource> => {
     try {
@@ -289,8 +237,7 @@ export const datasourceAPI = {
         file_name: datasource.type !== 'website' ? datasource.filename : ''
       };
       
-      // If the API supports updating datasources
-      await api.put(`/companies/${companyId}/datasources/${datasource.id}`, payload);
+      await axios.put(DATASOURCE_ROUTES.updateCompanyDataSource(companyId, datasource.id), payload);
       
       return datasource;
     } catch (error) {
@@ -299,42 +246,12 @@ export const datasourceAPI = {
     }
   },
   
-  // Update a datasource for a contact
-  updateContactDatasource: async (contactId: string, datasource: DataSource): Promise<DataSource> => {
-    try {
-      const payload = {
-        source_type: datasource.type,
-        name: datasource.name,
-        link: datasource.type === 'website' ? datasource.link : '',
-        file_name: datasource.type !== 'website' ? datasource.filename : ''
-      };
-      
-      // If the API supports updating datasources
-      await api.put(`/contacts/${contactId}/datasources/${datasource.id}`, payload);
-      
-      return datasource;
-    } catch (error) {
-      console.error('Error updating contact datasource:', error);
-      throw error;
-    }
-  },
-  
   // Delete a datasource from a company
   deleteCompanyDatasource: async (companyId: string, datasourceId: string): Promise<void> => {
     try {
-      await api.delete(`/companies/${companyId}/datasources/${datasourceId}`);
+      await axios.delete(DATASOURCE_ROUTES.deleteCompanyDataSource(companyId, datasourceId));
     } catch (error) {
       console.error('Error deleting datasource:', error);
-      throw error;
-    }
-  },
-  
-  // Delete a datasource from a contact
-  deleteContactDatasource: async (contactId: string, datasourceId: string): Promise<void> => {
-    try {
-      await api.delete(`/contacts/${contactId}/datasources/${datasourceId}`);
-    } catch (error) {
-      console.error('Error deleting contact datasource:', error);
       throw error;
     }
   },
@@ -342,9 +259,27 @@ export const datasourceAPI = {
   // Process a datasource (extract data from it)
   processDatasource: async (datasourceId: string): Promise<void> => {
     try {
-      await api.post(`/datasources/${datasourceId}/process`);
+      const response = await axios.post(DATASOURCE_ROUTES.processDataSource(datasourceId));
+      
+      // Check for successful response
+      if (response.status !== 200) {
+        throw new Error(`Processing failed with status: ${response.status}`);
+      }
+      
+      return response.data;
     } catch (error) {
       console.error('Error processing datasource:', error);
+      throw error;
+    }
+  },
+  
+  // Get processing status of a datasource
+  getProcessingStatus: async (datasourceId: string): Promise<string> => {
+    try {
+      const response = await axios.get(DATASOURCE_ROUTES.getDataSourceStatus(datasourceId));
+      return response.data.status;
+    } catch (error) {
+      console.error('Error getting processing status:', error);
       throw error;
     }
   }
@@ -355,7 +290,7 @@ export const contactAPI = {
   // Get all contacts for a company
   getCompanyContacts: async (companyId: string): Promise<Contact[]> => {
     try {
-      const response = await api.get(`/contacts/company/${companyId}`);
+      const response = await axios.get(CONTACT_ROUTES.getCompanyContacts(companyId));
       
       // Map the backend response to our frontend Contact type
       return response.data.map((contact: any) => ({
@@ -390,7 +325,7 @@ export const contactAPI = {
         notes: contact.notes
       };
       
-      const response = await api.post('/contacts', payload);
+      const response = await axios.post(CONTACT_ROUTES.createContact(), payload);
       
       return {
         id: response.data.contact_id.toString(),
@@ -423,7 +358,7 @@ export const contactAPI = {
         notes: contact.notes
       };
       
-      const response = await api.put(`/contacts/${contact.id}`, payload);
+      const response = await axios.put(CONTACT_ROUTES.updateContact(contact.id), payload);
       
       return {
         id: response.data.contact_id.toString(),
@@ -442,7 +377,7 @@ export const contactAPI = {
   // Delete a contact
   deleteContact: async (contactId: string): Promise<void> => {
     try {
-      await api.delete(`/contacts/${contactId}`);
+      await axios.delete(CONTACT_ROUTES.deleteContact(contactId));
     } catch (error) {
       console.error('Error deleting contact:', error);
       throw error;
@@ -452,7 +387,7 @@ export const contactAPI = {
   // Get contact by ID
   getContactById: async (contactId: string): Promise<Contact> => {
     try {
-      const response = await api.get(`/contacts/${contactId}`);
+      const response = await axios.get(CONTACT_ROUTES.getContactById(contactId));
       
       return {
         id: response.data.contact_id.toString(),
@@ -469,4 +404,103 @@ export const contactAPI = {
   }
 };
 
-export default api;
+// Paragraph API endpoints
+export const paragraphAPI = {
+  // Get all paragraphs for a datasource
+  getDataSourceParagraphs: async (datasourceId: string): Promise<Module[]> => {
+    try {
+      const response = await axios.get(PARAGRAPH_ROUTES.getDataSourceParagraphs(datasourceId));
+      
+      // Handle empty response
+      if (!response.data || response.data.length === 0) {
+        return [];
+      }
+      
+      // Map the backend response to our frontend Module type
+      return response.data.map((paragraph: any) => ({
+        id: paragraph.paragraph_id.toString(),
+        title: paragraph.title || 'Untitled Paragraph',
+        content: paragraph.content,
+        mainIdea: paragraph.main_idea || '',
+        crawledAt: paragraph.created_at 
+          ? new Date(paragraph.created_at).toLocaleDateString() 
+          : 'Unknown'
+      }));
+    } catch (error) {
+      console.error('Error fetching paragraphs:', error);
+      
+      // Return empty array instead of throwing error to handle 404 gracefully
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return [];
+      }
+      
+      throw error;
+    }
+  },
+  
+  // Update a paragraph
+  updateParagraph: async (paragraph: Module): Promise<Module> => {
+    try {
+      const payload = {
+        title: paragraph.title,
+        content: paragraph.content,
+        main_idea: paragraph.mainIdea
+      };
+      
+      const response = await axios.put(PARAGRAPH_ROUTES.updateParagraph(paragraph.id), payload);
+      
+      return {
+        id: response.data.paragraph_id.toString(),
+        title: response.data.title || paragraph.title,
+        content: response.data.content,
+        mainIdea: response.data.main_idea || paragraph.mainIdea,
+        crawledAt: paragraph.crawledAt
+      };
+    } catch (error) {
+      console.error('Error updating paragraph:', error);
+      throw error;
+    }
+  },
+  
+  // Delete a paragraph
+  deleteParagraph: async (paragraphId: string): Promise<void> => {
+    try {
+      await axios.delete(PARAGRAPH_ROUTES.deleteParagraph(paragraphId));
+    } catch (error) {
+      console.error('Error deleting paragraph:', error);
+      throw error;
+    }
+  },
+  
+  // Create a new paragraph
+  createParagraph: async (datasourceId: string, paragraph: Omit<Module, "id" | "crawledAt">): Promise<Module> => {
+    try {
+      const payload = {
+        datasource_id: datasourceId,
+        title: paragraph.title,
+        content: paragraph.content,
+        main_idea: paragraph.mainIdea
+      };
+      
+      const response = await axios.post(PARAGRAPH_ROUTES.createParagraph(), payload);
+      
+      return {
+        id: response.data.paragraph_id.toString(),
+        title: response.data.title || 'Untitled Paragraph',
+        content: response.data.content,
+        mainIdea: response.data.main_idea || '',
+        crawledAt: new Date().toLocaleDateString()
+      };
+    } catch (error) {
+      console.error('Error creating paragraph:', error);
+      throw error;
+    }
+  }
+};
+
+export default {
+  companyAPI,
+  datasourceAPI,
+  contactAPI,
+  paragraphAPI
+};
