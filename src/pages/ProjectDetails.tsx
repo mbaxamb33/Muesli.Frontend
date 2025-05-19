@@ -1,3 +1,4 @@
+// src/pages/ProjectDetails.tsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
@@ -9,102 +10,7 @@ import { DataSourcesTable, DataSource } from "../components/DatasourcesTable";
 import { AddDataSourceCard } from "../components/AddDataSourceCard";
 import { EditDataSourceSheet } from "../components/EditDataSourceSheet";
 import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
-
-// Sample projects (in a real app, this would come from an API or global state)
-const initialProjects: Project[] = [
-  {
-    id: "1",
-    name: "Website Redesign",
-    description: "Complete overhaul of the company website with new branding",
-    createdAt: "May 1, 2025",
-    sourceCount: 5
-  },
-  {
-    id: "2",
-    name: "Mobile App Development",
-    description: "Build native apps for iOS and Android platforms",
-    createdAt: "April 15, 2025",
-    sourceCount: 8
-  },
-  {
-    id: "3",
-    name: "Data Migration",
-    description: "Transfer data from legacy systems to new platform",
-    createdAt: "March 30, 2025",
-    sourceCount: 3
-  },
-  {
-    id: "4",
-    name: "Brand Identity Update",
-    description: "Refresh company logo, colors, and design language",
-    createdAt: "May 5, 2025",
-    sourceCount: 12
-  },
-  {
-    id: "5",
-    name: "Customer Portal",
-    description: "Develop self-service portal for customer account management",
-    createdAt: "April 28, 2025",
-    sourceCount: 7
-  }
-];
-
-// Sample data sources for projects
-const initialProjectDataSources: Record<string, DataSource[]> = {
-  "1": [
-    {
-      id: "pds1",
-      name: "Current Website Analysis",
-      type: "pdf",
-      status: "Processed",
-      filename: "current_website_analysis.pdf"
-    },
-    {
-      id: "pds2",
-      name: "Competitor Websites",
-      type: "website",
-      status: "Processed",
-      link: "competitor-analysis.com"
-    },
-    {
-      id: "pds3",
-      name: "Brand Guidelines",
-      type: "pdf",
-      status: "Processed",
-      filename: "brand_guidelines_2025.pdf"
-    },
-    {
-      id: "pds4",
-      name: "Wireframes",
-      type: "pdf",
-      status: "In queue",
-      filename: "wireframes_v2.pdf"
-    },
-    {
-      id: "pds5",
-      name: "User Feedback",
-      type: "excel",
-      status: "Extracting",
-      filename: "user_feedback_survey.xlsx"
-    }
-  ],
-  "2": [
-    {
-      id: "pds6",
-      name: "Mobile App Requirements",
-      type: "word",
-      status: "Processed",
-      filename: "app_requirements.docx"
-    },
-    {
-      id: "pds7",
-      name: "UI/UX Design Files",
-      type: "website",
-      status: "Not extracted",
-      link: "figma.com/design-files"
-    }
-  ]
-};
+import { projectAPI, datasourceAPI } from "../services/projectAPI";
 
 type DeleteItem = {
   type: 'dataSource';
@@ -120,21 +26,47 @@ export const ProjectDetails = (): JSX.Element => {
   
   const [project, setProject] = useState<Project | null>(null);
   const [dataSources, setDataSources] = useState<DataSource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Modal states
   const [showAddDataSourceCard, setShowAddDataSourceCard] = useState(false);
   const [editDataSource, setEditDataSource] = useState<DataSource | null>(null);
   const [deleteItem, setDeleteItem] = useState<DeleteItem | null>(null);
 
+  // Fetch project data from API
   useEffect(() => {
-    // In a real app, this would be an API call
-    if (projectId) {
-      const foundProject = initialProjects.find(p => p.id === projectId);
-      setProject(foundProject || null);
+    const fetchProjectData = async () => {
+      if (!projectId) return;
       
-      // Load data sources for this project
-      setDataSources(initialProjectDataSources[projectId] || []);
-    }
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch project details
+        const projectData = await projectAPI.getProjectById(projectId);
+        setProject(projectData);
+        
+        // Fetch project datasources
+        const datasources = await datasourceAPI.getProjectDatasources(projectId);
+        setDataSources(datasources);
+        
+        // Update project source count if needed
+        if (projectData.sourceCount !== datasources.length) {
+          setProject({
+            ...projectData,
+            sourceCount: datasources.length
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching project data:", error);
+        setError("Failed to load project details. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProjectData();
   }, [projectId]);
 
   // Create breadcrumbs with project name when available
@@ -154,66 +86,144 @@ export const ProjectDetails = (): JSX.Element => {
     return items;
   }, [projectId, project]);
 
-  // Data source handlers
-  const addDataSource = (dataSource: Omit<DataSource, "id">) => {
-    const newDataSource = {
-      ...dataSource,
-      id: Math.random().toString(36).substring(2, 9)
-    };
-    setDataSources([...dataSources, newDataSource]);
+  // Add datasource to project
+  const addDataSource = async (dataSource: Omit<DataSource, "id">) => {
+    if (!projectId) return;
     
-    // Also update the project's source count
-    if (project) {
-      const updatedProject = {
-        ...project,
-        sourceCount: project.sourceCount + 1
-      };
-      setProject(updatedProject);
+    try {
+      setIsLoading(true);
+      
+      // Create datasource and associate with project
+      const newDataSource = await datasourceAPI.createProjectDatasource(projectId, dataSource);
+      
+      // Update local state
+      setDataSources([...dataSources, newDataSource]);
+      
+      // Update project source count
+      if (project) {
+        setProject({
+          ...project,
+          sourceCount: project.sourceCount + 1
+        });
+      }
+      
+      setShowAddDataSourceCard(false);
+    } catch (error) {
+      console.error("Failed to add datasource:", error);
+      setError("Failed to add datasource. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Update a datasource
+  const updateDataSource = async (updatedDataSource: DataSource) => {
+    if (!projectId) return;
     
-    setShowAddDataSourceCard(false);
+    try {
+      setIsLoading(true);
+      
+      // Update datasource in the backend
+      await datasourceAPI.updateProjectDatasource(projectId, updatedDataSource);
+      
+      // Update local state
+      setDataSources(dataSources.map(ds => 
+        ds.id === updatedDataSource.id ? updatedDataSource : ds
+      ));
+      
+      // Close the edit form
+      setEditDataSource(null);
+    } catch (error) {
+      console.error("Failed to update datasource:", error);
+      setError("Failed to update datasource. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateDataSource = (updatedDataSource: DataSource) => {
-    setDataSources(dataSources.map(ds => 
-      ds.id === updatedDataSource.id ? updatedDataSource : ds
-    ));
-    setEditDataSource(null);
-  };
-
+  // Delete a datasource
   const deleteDataSource = (dataSource: DataSource) => {
     // First close the edit sheet
     setEditDataSource(null);
     
-    // Small delay to ensure smooth transition
-    setTimeout(() => {
-      setDeleteItem({
-        type: 'dataSource',
-        id: dataSource.id,
-        name: dataSource.name
-      });
-    }, 100);
+    // Show delete confirmation modal
+    setDeleteItem({
+      type: 'dataSource',
+      id: dataSource.id,
+      name: dataSource.name
+    });
   };
 
   // Handle confirmation of deletion
-  const handleConfirmDelete = () => {
-    if (!deleteItem) return;
-
-    setDataSources(dataSources.filter(ds => ds.id !== deleteItem.id));
+  const handleConfirmDelete = async () => {
+    if (!deleteItem || !projectId) return;
     
-    // Also update the project's source count
-    if (project) {
-      const updatedProject = {
-        ...project,
-        sourceCount: project.sourceCount - 1
-      };
-      setProject(updatedProject);
+    try {
+      setIsLoading(true);
+      
+      // Delete datasource from the backend
+      await datasourceAPI.deleteProjectDatasource(projectId, deleteItem.id);
+      
+      // Update local state
+      setDataSources(dataSources.filter(ds => ds.id !== deleteItem.id));
+      
+      // Update project source count
+      if (project) {
+        setProject({
+          ...project,
+          sourceCount: project.sourceCount - 1
+        });
+      }
+      
+      setDeleteItem(null);
+    } catch (error) {
+      console.error(`Failed to delete ${deleteItem.type}:`, error);
+      setError(`Failed to delete ${deleteItem.type}. Please try again.`);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setDeleteItem(null);
   };
 
-  if (!project) {
+  // Loading state
+  if (isLoading && !project) {
+    return (
+      <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
+        <div className="flex items-center space-x-2">
+          <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
+            Loading project details...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !project) {
+    return (
+      <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
+        <div className="text-center">
+          <div className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>
+            {error}
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className={`${
+              isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
+            }`}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
+  if (!project && !isLoading) {
     return (
       <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen p-6 transition-colors duration-300 flex items-center justify-center`}>
         <p className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -245,9 +255,20 @@ export const ProjectDetails = (): JSX.Element => {
             Back to Projects
           </Button>
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            {project.name}
+            {project?.name}
           </h1>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div className={`rounded-lg border-l-4 p-4 mb-6 ${
+            isDark 
+            ? "bg-red-900/30 border-red-500 text-red-300" 
+            : "bg-red-50 border-red-500 text-red-700"
+          }`}>
+            <p>{error}</p>
+          </div>
+        )}
 
         {/* Project Details Card */}
         <div className={`rounded-lg shadow-md p-6 mb-8 ${
@@ -267,7 +288,7 @@ export const ProjectDetails = (): JSX.Element => {
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`}>Description</span>
                   <p className={`${isDark ? 'text-white' : 'text-gray-800'}`}>
-                    {project.description}
+                    {project?.description || 'No description provided'}
                   </p>
                 </div>
                 <div>
@@ -275,7 +296,7 @@ export const ProjectDetails = (): JSX.Element => {
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`}>Created At</span>
                   <p className={`${isDark ? 'text-white' : 'text-gray-800'}`}>
-                    {project.createdAt}
+                    {project?.createdAt}
                   </p>
                 </div>
                 <div>
@@ -286,10 +307,10 @@ export const ProjectDetails = (): JSX.Element => {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mr-2 ${
                       isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
                     }`}>
-                      {project.sourceCount}
+                      {project?.sourceCount || 0}
                     </span>
                     <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {project.sourceCount === 1 ? 'source' : 'sources'} attached to this project
+                      {project?.sourceCount === 1 ? 'source' : 'sources'} attached to this project
                     </span>
                   </div>
                 </div>
@@ -409,6 +430,7 @@ export const ProjectDetails = (): JSX.Element => {
               className={`${
                 isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
               }`}
+              disabled={isLoading}
             >
               <PlusIcon className="w-4 h-4 mr-2" />
               Add Data Source
@@ -416,12 +438,24 @@ export const ProjectDetails = (): JSX.Element => {
           </div>
 
           {/* Data Sources Table */}
-          <DataSourcesTable 
-            dataSources={dataSources} 
-            isDark={isDark}
-            onEditClick={(dataSource) => setEditDataSource(dataSource)}
-            sourceType="project" // Specify that this is for a project
-          />
+          {isLoading && dataSources.length === 0 ? (
+            <div className={`flex justify-center items-center p-8 rounded-lg border ${
+              isDark ? "border-[#2e2c50] bg-[#17162e] text-gray-300" : "border-gray-200 bg-white text-gray-500"
+            }`}>
+              <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Loading data sources...
+            </div>
+          ) : (
+            <DataSourcesTable 
+              dataSources={dataSources} 
+              isDark={isDark}
+              onEditClick={(dataSource) => setEditDataSource(dataSource)}
+              sourceType="project" // Specify that this is for a project
+            />
+          )}
         </div>
 
         {/* Modals and Sheets */}

@@ -1,15 +1,8 @@
 // src/services/api.ts
 import axios from 'axios';
 import { Module } from '../types/module';
-import { DATASOURCE_ROUTES, PARAGRAPH_ROUTES, COMPANY_ROUTES, CONTACT_ROUTES, BASE_API_URL } from '../api/api-routes';
-
-// Create axios instance with base URL
-const api = axios.create({
-  baseURL: '/api/v1', // Relative URL for production
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import { DATASOURCE_ROUTES, PARAGRAPH_ROUTES, COMPANY_ROUTES, CONTACT_ROUTES, PROJECT_ROUTES, BASE_API_URL } from '../api/api-routes';
+import { projectAPI, datasourceAPI as projectDatasourceAPI } from './projectAPI';
 
 // Company type definition
 export interface Company {
@@ -253,7 +246,7 @@ export const datasourceAPI = {
     }
   },
   
-  // Update a datasource for a company
+  // Update a datasource
   updateDatasource: async (companyId: string, datasource: DataSource): Promise<DataSource> => {
     try {
       const payload = {
@@ -362,42 +355,42 @@ export const contactAPI = {
     }
   },
   
-// Create a new contact for a company
-createContact: async (companyId: string, contact: Omit<Contact, 'id'>): Promise<Contact> => {
-  try {
-    // Split the name into first name and last name
-    const nameParts = contact.name.trim().split(' ');
-    const firstName = nameParts[0] || 'Unknown';
-    const lastName = nameParts.length > 1 
-      ? nameParts.slice(1).join(' ') 
-      : 'Lastname'; // Default last name
-   
-    const payload = {
-      company_id: parseInt(companyId),
-      first_name: firstName,
-      last_name: lastName,
-      position: contact.position || '',
-      email: contact.email || '',
-      phone: contact.phone || '',
-      notes: contact.notes || ''
-    };
-   
-    const response = await axios.post(`${BASE_API_URL}/contacts/`, payload);
-   
-    return {
-      id: response.data.contact_id.toString(),
-      name: `${response.data.first_name} ${response.data.last_name}`,
-      position: response.data.position || '',
-      email: response.data.email || '',
-      phone: response.data.phone || '',
-      notes: response.data.notes || ''
-    };
-  } catch (error) {
-    console.error('Error creating contact:', error);
-    throw error;
-  }
-},
-  
+  // Create a new contact for a company
+  createContact: async (companyId: string, contact: Omit<Contact, 'id'>): Promise<Contact> => {
+    try {
+      // Split the name into first name and last name
+      const nameParts = contact.name.trim().split(' ');
+      const firstName = nameParts[0] || 'Unknown';
+      const lastName = nameParts.length > 1 
+        ? nameParts.slice(1).join(' ') 
+        : 'Lastname'; // Default last name
+     
+      const payload = {
+        company_id: parseInt(companyId),
+        first_name: firstName,
+        last_name: lastName,
+        position: contact.position || '',
+        email: contact.email || '',
+        phone: contact.phone || '',
+        notes: contact.notes || ''
+      };
+     
+      const response = await axios.post(`${BASE_API_URL}/contacts/`, payload);
+     
+      return {
+        id: response.data.contact_id.toString(),
+        name: `${response.data.first_name} ${response.data.last_name}`,
+        position: response.data.position || '',
+        email: response.data.email || '',
+        phone: response.data.phone || '',
+        notes: response.data.notes || ''
+      };
+    } catch (error) {
+      console.error('Error creating contact:', error);
+      throw error;
+    }
+  },
+    
   // Update an existing contact
   updateContact: async (contact: Contact): Promise<Contact> => {
     try {
@@ -555,9 +548,14 @@ export const paragraphAPI = {
   }
 };
 
+// Export project APIs from projectAPI.ts
+export { projectAPI, projectDatasourceAPI };
+
 export default {
   companyAPI,
   datasourceAPI,
   contactAPI,
-  paragraphAPI
+  paragraphAPI,
+  projectAPI,
+  projectDatasourceAPI
 };

@@ -4,146 +4,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Project } from "./Projects";
 import { DataSource } from "../components/DatasourcesTable";
+import { Module } from "../types/module";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { Button } from "../components/components/button";
-import { EditIcon, TrashIcon, ArrowLeftIcon, GlobeIcon, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon } from "lucide-react";
+import { ArrowLeftIcon, GlobeIcon, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon } from "lucide-react";
 import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 import { EditDataSourceSheet } from "../components/EditDataSourceSheet";
-import { ModulesSection, Module } from "../components/ModuleSection";
-
-// Sample projects (in a real app, this would come from an API or global state)
-const initialProjects: Project[] = [
-  {
-    id: "1",
-    name: "Website Redesign",
-    description: "Complete overhaul of the company website with new branding",
-    createdAt: "May 1, 2025",
-    sourceCount: 5
-  },
-  {
-    id: "2",
-    name: "Mobile App Development",
-    description: "Build native apps for iOS and Android platforms",
-    createdAt: "April 15, 2025",
-    sourceCount: 8
-  },
-  {
-    id: "3",
-    name: "Data Migration",
-    description: "Transfer data from legacy systems to new platform",
-    createdAt: "March 30, 2025",
-    sourceCount: 3
-  },
-  {
-    id: "4",
-    name: "Brand Identity Update",
-    description: "Refresh company logo, colors, and design language",
-    createdAt: "May 5, 2025",
-    sourceCount: 12
-  },
-  {
-    id: "5",
-    name: "Customer Portal",
-    description: "Develop self-service portal for customer account management",
-    createdAt: "April 28, 2025",
-    sourceCount: 7
-  }
-];
-
-// Sample data sources for projects
-const initialProjectDataSources: Record<string, DataSource[]> = {
-  "1": [
-    {
-      id: "pds1",
-      name: "Current Website Analysis",
-      type: "pdf",
-      status: "Processed",
-      filename: "current_website_analysis.pdf"
-    },
-    {
-      id: "pds2",
-      name: "Competitor Websites",
-      type: "website",
-      status: "Processed",
-      link: "competitor-analysis.com"
-    },
-    {
-      id: "pds3",
-      name: "Brand Guidelines",
-      type: "pdf",
-      status: "Processed",
-      filename: "brand_guidelines_2025.pdf"
-    },
-    {
-      id: "pds4",
-      name: "Wireframes",
-      type: "pdf",
-      status: "In queue",
-      filename: "wireframes_v2.pdf"
-    },
-    {
-      id: "pds5",
-      name: "User Feedback",
-      type: "excel",
-      status: "Extracting",
-      filename: "user_feedback_survey.xlsx"
-    }
-  ],
-  "2": [
-    {
-      id: "pds6",
-      name: "Mobile App Requirements",
-      type: "word",
-      status: "Processed",
-      filename: "app_requirements.docx"
-    },
-    {
-      id: "pds7",
-      name: "UI/UX Design Files",
-      type: "website",
-      status: "Not extracted",
-      link: "figma.com/design-files"
-    }
-  ]
-};
-
-// Sample modules for data sources
-const initialModules: Record<string, Module[]> = {
-  "pds1": [
-    {
-      id: "pm1",
-      title: "Current Website Issues",
-      content: "The current website has several usability problems and outdated design elements. Navigation is difficult, especially on mobile devices. Load times are slow due to unoptimized images and excessive JavaScript. The site is not accessible for users with disabilities.",
-      mainIdea: "Summary of problems with the current website",
-      crawledAt: "May 2, 2025"
-    },
-    {
-      id: "pm2",
-      title: "Competitive Analysis",
-      content: "Analysis of 5 competitor websites shows trends toward minimalist design, improved mobile experiences, and integration of interactive elements. Most competitors have implemented dark mode options and accessibility features. Load times average under 3 seconds.",
-      mainIdea: "Market research on competitor website designs",
-      crawledAt: "May 2, 2025"
-    }
-  ],
-  "pds2": [
-    {
-      id: "pm3",
-      title: "Design Inspiration",
-      content: "Collection of design elements and user interactions from leading websites in the industry. Notable features include sticky navigation, parallax scrolling effects, and subtle animations that enhance user experience without becoming distracting.",
-      mainIdea: "Noteworthy design elements from other websites",
-      crawledAt: "May 3, 2025"
-    }
-  ],
-  "pds6": [
-    {
-      id: "pm4",
-      title: "Core Functionality",
-      content: "The mobile application must support user authentication, profile management, product browsing, cart/checkout process, order history, and notification preferences. Integration with existing backend systems is required. The app should work offline for basic browsing functionality.",
-      mainIdea: "Essential features for the mobile application",
-      crawledAt: "April 16, 2025"
-    }
-  ]
-};
+import { ExtractedParagraphs } from "../components/ExtractedParagraphs";
+import { DataSourceProcessing } from "../components/DataSourceProcessing";
+import { projectAPI, datasourceAPI } from "../services/projectAPI";
+import { paragraphAPI } from "../services/api";
 
 export const ProjectDataSourceDetails = (): JSX.Element => {
   const { projectId, dataSourceId } = useParams<{ projectId: string; dataSourceId: string }>();
@@ -151,33 +21,59 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   
+  // State variables
   const [dataSource, setDataSource] = useState<DataSource | null>(null);
   const [project, setProject] = useState<Project | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Modal states
   const [editDataSource, setEditDataSource] = useState<DataSource | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [modules, setModules] = useState<Module[]>([]);
 
+  // Fetch data when component mounts
   useEffect(() => {
-    // Fetch project data
-    if (projectId) {
-      const foundProject = initialProjects.find(p => p.id === projectId);
-      setProject(foundProject || null);
-    }
+    const fetchData = async () => {
+      if (!projectId || !dataSourceId) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch project details
+        const projectData = await projectAPI.getProjectById(projectId);
+        setProject(projectData);
+        
+        // Fetch datasource details
+        const projectSources = await datasourceAPI.getProjectDatasources(projectId);
+        const source = projectSources.find(ds => ds.id === dataSourceId);
+        
+        if (source) {
+          setDataSource(source);
+          
+          // Fetch paragraphs for this datasource
+          try {
+            const paragraphs = await paragraphAPI.getDataSourceParagraphs(dataSourceId);
+            setModules(paragraphs);
+          } catch (err) {
+            console.error("Error fetching paragraphs:", err);
+            // Don't show error for empty paragraphs
+            setModules([]);
+          }
+        } else {
+          setError("Datasource not found in this project");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Failed to load data. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    // Fetch data source
-    if (projectId && dataSourceId) {
-      const projectSources = initialProjectDataSources[projectId] || [];
-      const foundDataSource = projectSources.find(ds => ds.id === dataSourceId);
-      setDataSource(foundDataSource || null);
-    }
+    fetchData();
   }, [projectId, dataSourceId]);
-
-  // Load modules for this data source
-  useEffect(() => {
-    if (dataSourceId) {
-      setModules(initialModules[dataSourceId] || []);
-    }
-  }, [dataSourceId]);
 
   // Generate breadcrumb items
   const breadcrumbItems = React.useMemo(() => {
@@ -203,43 +99,130 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
     return items;
   }, [project, dataSource, projectId, dataSourceId]);
 
-  const handleEdit = () => {
-    if (dataSource) {
-      setEditDataSource(dataSource);
+  // Process the datasource to extract paragraphs
+  const processDatasource = async () => {
+    if (!dataSourceId) return;
+    
+    try {
+      // Process datasource to extract paragraphs
+      await datasourceAPI.processDatasource(dataSourceId);
+      
+      // Update the status to indicate processing
+      if (dataSource) {
+        setDataSource({
+          ...dataSource,
+          status: 'In queue'
+        });
+      }
+      
+      // Show success message
+      setError(null);
+    } catch (error) {
+      console.error("Error processing datasource:", error);
+      setError("Failed to process datasource. Please try again.");
     }
   };
 
-  const handleDelete = () => {
-    setShowDeleteModal(true);
+  // Update data source
+  const updateDataSource = async (updatedDataSource: DataSource) => {
+    if (!projectId) return;
+    
+    try {
+      setIsLoading(true);
+      // Update datasource in the backend
+      await datasourceAPI.updateProjectDatasource(projectId, updatedDataSource);
+      
+      // Update local state
+      setDataSource(updatedDataSource);
+    } catch (error) {
+      console.error("Error updating data source:", error);
+      setError("Failed to update data source. Please try again.");
+    } finally {
+      setEditDataSource(null);
+      setIsLoading(false);
+    }
   };
 
-  const confirmDelete = () => {
-    // In a real app, this would make an API call to delete the data source
-    // For now, just navigate back to the project page
-    setShowDeleteModal(false);
-    navigate(`/projects/${projectId}`);
-  };
-
-  const updateDataSource = (updatedDataSource: DataSource) => {
-    // In a real app, this would make an API call to update the data source
-    setDataSource(updatedDataSource);
-    setEditDataSource(null);
-  };
-
+  // Delete data source
   const deleteDataSource = (dataSource: DataSource) => {
     setEditDataSource(null);
     setShowDeleteModal(true);
   };
 
-  // Module handlers
-  const updateModule = (updatedModule: Module) => {
-    setModules(modules.map(module => 
-      module.id === updatedModule.id ? updatedModule : module
-    ));
+  // Confirm deletion
+  const confirmDelete = async () => {
+    if (!projectId || !dataSourceId) return;
+    
+    try {
+      setIsLoading(true);
+      // Delete datasource from the backend
+      await datasourceAPI.deleteProjectDatasource(projectId, dataSourceId);
+      
+      // Navigate back to the project page
+      navigate(`/projects/${projectId}`);
+    } catch (error) {
+      console.error("Error deleting data source:", error);
+      setError("Failed to delete data source. Please try again.");
+      setIsLoading(false);
+      setShowDeleteModal(false);
+    }
   };
 
-  const deleteModule = (moduleId: string) => {
-    setModules(modules.filter(module => module.id !== moduleId));
+  // Module/Paragraph handlers
+  const updateModule = async (updatedModule: Module) => {
+    try {
+      setIsLoading(true);
+      // Update paragraph in the backend
+      await paragraphAPI.updateParagraph(updatedModule);
+      
+      // Update local state
+      setModules(modules.map(module => 
+        module.id === updatedModule.id ? updatedModule : module
+      ));
+    } catch (error) {
+      console.error("Error updating paragraph:", error);
+      setError("Failed to update paragraph. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteModule = async (moduleId: string) => {
+    try {
+      setIsLoading(true);
+      // Delete paragraph from the backend
+      await paragraphAPI.deleteParagraph(moduleId);
+      
+      // Update local state
+      setModules(modules.filter(module => module.id !== moduleId));
+    } catch (error) {
+      console.error("Error deleting paragraph:", error);
+      setError("Failed to delete paragraph. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle processing completion
+  const handleProcessingComplete = async () => {
+    if (!dataSourceId) return;
+    
+    try {
+      // Refresh the datasource status
+      const status = await datasourceAPI.getProcessingStatus(dataSourceId);
+      if (dataSource) {
+        setDataSource({
+          ...dataSource,
+          status: status
+        });
+      }
+      
+      // Fetch updated paragraphs
+      const paragraphs = await paragraphAPI.getDataSourceParagraphs(dataSourceId);
+      setModules(paragraphs);
+    } catch (error) {
+      console.error("Error refreshing data after processing:", error);
+    }
   };
 
   // Get icon based on data source type
@@ -255,18 +238,46 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
     }
   };
 
-  // Get status color based on data source status
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Processed': return isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800';
-      case 'Not extracted': return isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
-      case 'In queue': return isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800';
-      case 'Extracting': return isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800';
-      default: return isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
-    }
-  };
+  // Loading state
+  if (isLoading && !dataSource) {
+    return (
+      <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
+        <div className="flex items-center space-x-2">
+          <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
+            Loading datasource details...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
-  if (!dataSource || !project) {
+  // Error state
+  if (error && !dataSource && !project) {
+    return (
+      <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
+        <div className="text-center">
+          <div className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>
+            {error}
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className={`${
+              isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
+            }`}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
+  if (!dataSource && !isLoading) {
     return (
       <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen p-6 transition-colors duration-300 flex items-center justify-center`}>
         <p className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -295,12 +306,23 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
             }`}
           >
             <ArrowLeftIcon className="w-4 h-4 mr-1" />
-            Back to {project.name}
+            Back to {project?.name || 'Project'}
           </Button>
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            {dataSource.name}
+            {dataSource?.name || 'Data Source Details'}
           </h1>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div className={`rounded-lg border-l-4 p-4 mb-6 ${
+            isDark 
+            ? "bg-red-900/30 border-red-500 text-red-300" 
+            : "bg-red-50 border-red-500 text-red-700"
+          }`}>
+            <p>{error}</p>
+          </div>
+        )}
 
         {/* Data Source Details Card */}
         <div className={`rounded-lg shadow-md p-6 ${
@@ -313,25 +335,35 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
                 <div className={`p-3 rounded-full mr-3 ${
                   isDark ? 'bg-[#201e3d]' : 'bg-gray-100'
                 }`}>
-                  {getTypeIcon(dataSource.type)}
+                  {dataSource && getTypeIcon(dataSource.type)}
                 </div>
                 <div>
                   <h2 className={`text-xl font-semibold ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
                   }`}>
-                    {dataSource.name}
+                    {dataSource?.name || 'Unnamed Data Source'}
                   </h2>
                   <div className="flex items-center mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      getStatusColor(dataSource.status)
-                    }`}>
-                      {dataSource.status}
-                    </span>
-                    <span className={`ml-2 text-sm ${
-                      isDark ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      {dataSource.type.charAt(0).toUpperCase() + dataSource.type.slice(1)}
-                    </span>
+                    {dataSource && (
+                      <>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          dataSource.status === 'Processed' 
+                            ? isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800' 
+                            : dataSource.status === 'Not extracted'
+                              ? isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600'
+                              : dataSource.status === 'In queue'
+                                ? isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
+                                : isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {dataSource.status}
+                        </span>
+                        <span className={`ml-2 text-sm ${
+                          isDark ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {dataSource.type.charAt(0).toUpperCase() + dataSource.type.slice(1)}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -346,7 +378,7 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
                   <p className={`${
                     isDark ? 'text-white' : 'text-gray-800'
                   }`}>
-                    {project.name}
+                    {project?.name || 'Unknown Project'}
                   </p>
                 </div>
 
@@ -354,9 +386,9 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
                   <h3 className={`text-sm font-medium mb-1 ${
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`}>
-                    {dataSource.type === 'website' ? 'URL' : 'Filename'}
+                    {dataSource?.type === 'website' ? 'URL' : 'Filename'}
                   </h3>
-                  {dataSource.type === 'website' && dataSource.link ? (
+                  {dataSource?.type === 'website' && dataSource.link ? (
                     <a 
                       href={dataSource.link.startsWith('http') ? dataSource.link : `https://${dataSource.link}`}
                       target="_blank"
@@ -371,7 +403,7 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
                     <p className={`${
                       isDark ? 'text-white' : 'text-gray-800'
                     }`}>
-                      {dataSource.filename || "N/A"}
+                      {dataSource?.filename || "N/A"}
                     </p>
                   )}
                 </div>
@@ -379,100 +411,29 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
             </div>
 
             {/* Right Column - Processing Information */}
-            <div className={`p-5 rounded-lg ${
-              isDark ? 'bg-[#201e3d]' : 'bg-gray-50'
-            }`}>
-              <h3 className={`text-lg font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
-                Processing Information
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className={`text-sm font-medium mb-1 ${
-                    isDark ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    Status
-                  </h4>
-                  <div className={`w-full h-2 rounded-full ${
-                    isDark ? 'bg-[#2e2c50]' : 'bg-gray-200'
-                  }`}>
-                    <div 
-                      className={`h-2 rounded-full ${
-                        dataSource.status === 'Processed' 
-                          ? isDark ? 'bg-green-500' : 'bg-green-600'
-                          : dataSource.status === 'Extracting'
-                            ? isDark ? 'bg-yellow-500' : 'bg-yellow-600'
-                            : dataSource.status === 'In queue'
-                              ? isDark ? 'bg-blue-500' : 'bg-blue-600'
-                              : isDark ? 'bg-gray-700' : 'bg-gray-400'
-                      }`}
-                      style={{ 
-                        width: dataSource.status === 'Processed' 
-                          ? '100%' 
-                          : dataSource.status === 'Extracting'
-                            ? '60%'
-                            : dataSource.status === 'In queue'
-                              ? '30%'
-                              : '0%'
-                      }}
-                    ></div>
-                  </div>
-                  <p className={`mt-1 text-sm ${
-                    isDark ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    {dataSource.status === 'Processed' 
-                      ? 'This data source has been fully processed and is ready for use.'
-                      : dataSource.status === 'Extracting'
-                        ? 'Currently extracting information from this data source.'
-                        : dataSource.status === 'In queue'
-                          ? 'This data source is waiting to be processed.'
-                          : 'This data source has not started processing yet.'}
-                  </p>
-                </div>
-
-                {dataSource.status === 'Processed' && (
-                  <div>
-                    <h4 className={`text-sm font-medium mb-1 ${
-                      isDark ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Processed Date
-                    </h4>
-                    <p className={`${
-                      isDark ? 'text-white' : 'text-gray-800'
-                    }`}>
-                      May 10, 2025
-                    </p>
-                  </div>
-                )}
-
-                {/* Action button for processed data sources */}
-                {dataSource.status === 'Processed' && (
-                  <Button
-                    className={`mt-4 ${
-                      isDark 
-                      ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" 
-                      : "bg-blue-700 hover:bg-blue-800 text-white"
-                    }`}
-                  >
-                    Process Datasource
-                  </Button>
-                )}
-              </div>
-            </div>
+            {dataSource && (
+              <DataSourceProcessing
+                dataSourceId={dataSourceId || ""}
+                status={dataSource.status}
+                processDatasource={processDatasource}
+                isDark={isDark}
+                onProcessingComplete={handleProcessingComplete}
+              />
+            )}
           </div>
         </div>
 
-        {/* Modules Section */}
-        <div className="mt-8">
-          <ModulesSection 
+        {/* Extracted Paragraphs Section */}
+        {dataSource && (
+          <ExtractedParagraphs
             modules={modules}
+            isLoading={isLoading}
             isDark={isDark}
             onUpdateModule={updateModule}
             onDeleteModule={deleteModule}
+            status={dataSource.status}
           />
-        </div>
+        )}
 
         {/* Edit Data Source Sheet */}
         <EditDataSourceSheet
@@ -485,7 +446,7 @@ export const ProjectDataSourceDetails = (): JSX.Element => {
         />
 
         {/* Delete Confirmation Modal */}
-        {showDeleteModal && (
+        {showDeleteModal && dataSource && (
           <DeleteConfirmationModal
             itemName={dataSource.name}
             itemType="Data Source"
