@@ -13,8 +13,7 @@ export const DATASOURCE_ROUTES = {
   getContactDataSources: (contactId: string) => `${BASE_API_URL}/contacts/${contactId}/datasources`,
   
   // Get all data sources for a project
-  getProjectDataSources: (projectId: string) => `${BASE_API_URL}/projects/${projectId}/datasources`,
-  
+  getProjectDataSources: (projectId: string) => `${BASE_API_URL}/projects/${projectId}/datasources`,  
   // Process a data source
   processDataSource: (dataSourceId: string) => `${BASE_API_URL}/datasources/${dataSourceId}/process`,
   
