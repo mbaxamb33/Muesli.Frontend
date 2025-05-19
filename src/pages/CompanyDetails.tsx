@@ -13,6 +13,8 @@ import { AddContactCard } from "../components/AddContactCard";
 import { EditContactSheet } from "../components/EditContactSheet";
 import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 import { companyAPI, datasourceAPI, contactAPI } from "../services/api";
+import { ContactDebugger } from "../components/ContactDebugger"; // Make sure to add this import
+
 
 type DeleteItem = {
   type: 'dataSource' | 'contact';
@@ -39,6 +41,8 @@ export const CompanyDetails = (): JSX.Element => {
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [deleteItem, setDeleteItem] = useState<DeleteItem | null>(null);
 
+
+  const [showContactDebugger, setShowContactDebugger] = useState(false);
   // Create breadcrumbs directly with the company name when available
   const breadcrumbItems = React.useMemo(() => {
     const baseBreadcrumbs = [

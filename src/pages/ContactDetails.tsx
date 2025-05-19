@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Contact } from "../components/ContactsTable";
-import { DataSource } from "../components/Datas ourcesTable";
+import { DataSource } from "../components/DatasourcesTable";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { Button } from "../components/components/button";
 import { PlusIcon, ArrowLeftIcon, PhoneIcon, MailIcon, Edit2Icon } from "lucide-react";
@@ -89,7 +89,7 @@ export const ContactDetails = (): JSX.Element => {
       setIsLoading(true);
       setError(null);
       
-      // Add datasource to contact in the backend
+      // Add datasource to contact in the backend using the correct method
       const newDataSource = await datasourceAPI.createContactDatasource(contactId, dataSource);
       
       // Update local state
@@ -112,7 +112,7 @@ export const ContactDetails = (): JSX.Element => {
       setIsLoading(true);
       setError(null);
       
-      // Update datasource in the backend
+      // Update datasource in the backend using the correct method
       await datasourceAPI.updateContactDatasource(contactId, updatedDataSource);
       
       // Update local state
@@ -184,7 +184,7 @@ export const ContactDetails = (): JSX.Element => {
       setError(null);
       
       if (deleteItem.type === 'dataSource') {
-        // Delete datasource from the backend
+        // Delete datasource from the backend using the correct method
         await datasourceAPI.deleteContactDatasource(contactId, deleteItem.id);
         
         // Update local state

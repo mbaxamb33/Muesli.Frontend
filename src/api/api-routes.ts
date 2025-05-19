@@ -24,13 +24,35 @@ export const DATASOURCE_ROUTES = {
   // Create a data source for a company
   createCompanyDataSource: (companyId: string) => `${BASE_API_URL}/companies/${companyId}/datasources`,
   
+  // Create a data source for a contact
+  createContactDataSource: (contactId: string) => `${BASE_API_URL}/contacts/${contactId}/datasources`,
+  
+  // Create a data source for a project
+  createProjectDataSource: (projectId: string) => `${BASE_API_URL}/projects/${projectId}/datasources`,
+  
   // Update a data source for a company
   updateCompanyDataSource: (companyId: string, dataSourceId: string) => 
     `${BASE_API_URL}/companies/${companyId}/datasources/${dataSourceId}`,
   
+  // Update a data source for a contact
+  updateContactDataSource: (contactId: string, dataSourceId: string) => 
+    `${BASE_API_URL}/contacts/${contactId}/datasources/${dataSourceId}`,
+  
+  // Update a data source for a project
+  updateProjectDataSource: (projectId: string, dataSourceId: string) => 
+    `${BASE_API_URL}/projects/${projectId}/datasources/${dataSourceId}`,
+  
   // Delete a data source from a company
   deleteCompanyDataSource: (companyId: string, dataSourceId: string) => 
     `${BASE_API_URL}/companies/${companyId}/datasources/${dataSourceId}`,
+  
+  // Delete a data source from a contact
+  deleteContactDataSource: (contactId: string, dataSourceId: string) => 
+    `${BASE_API_URL}/contacts/${contactId}/datasources/${dataSourceId}`,
+  
+  // Delete a data source from a project
+  deleteProjectDataSource: (projectId: string, dataSourceId: string) => 
+    `${BASE_API_URL}/projects/${projectId}/datasources/${dataSourceId}`,
 };
 
 // Paragraph routes

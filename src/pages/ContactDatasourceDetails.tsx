@@ -1,151 +1,17 @@
-// src/pages/ContactDataSourceDetails.tsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { DataSource } from "../components/DatasourcesTable";
 import { Contact } from "../components/ContactsTable";
+import { Module } from "../types/module";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { Button } from "../components/components/button";
-import { EditIcon, TrashIcon, ArrowLeftIcon, GlobeIcon, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon } from "lucide-react";
+import { ArrowLeftIcon, GlobeIcon, FileIcon, FileTextIcon, FileSpreadsheetIcon, FileAudioIcon } from "lucide-react";
 import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 import { EditDataSourceSheet } from "../components/EditDataSourceSheet";
-import { ModulesSection, Module } from "../components/ModuleSection";
-
-// Sample contacts (in a real app, this would come from an API or global state)
-const initialContacts: Record<string, Contact[]> = {
-  "1": [
-    {
-      id: "c1",
-      name: "John Smith",
-      position: "CEO",
-      email: "john.smith@techinnovations.com",
-      phone: "+1 (123) 456-7890",
-      notes: "Primary contact for strategic decisions"
-    },
-    {
-      id: "c2",
-      name: "Jane Doe",
-      position: "CTO",
-      email: "jane.doe@techinnovations.com",
-      phone: "+1 (123) 456-7891",
-      notes: "Technical contact for implementation details"
-    }
-  ],
-  "2": [
-    {
-      id: "c3",
-      name: "Mike Johnson",
-      position: "Director",
-      email: "mike.johnson@greenenergysolutions.com",
-      phone: "+1 (987) 654-3210",
-      notes: "Main point of contact"
-    }
-  ],
-  "3": [
-    {
-      id: "c4",
-      name: "Sarah Williams",
-      position: "CFO",
-      email: "sarah.williams@globalfinance.com",
-      phone: "+1 (555) 123-4567",
-      notes: "Financial discussions and negotiations"
-    }
-  ]
-};
-
-// Sample data sources for contacts
-const initialContactDataSources: Record<string, DataSource[]> = {
-  "c1": [
-    {
-      id: "cds1",
-      name: "LinkedIn Profile",
-      type: "website",
-      status: "Processed",
-      link: "linkedin.com/in/johnsmith"
-    },
-    {
-      id: "cds2",
-      name: "Resume",
-      type: "pdf",
-      status: "Processed",
-      filename: "john_smith_resume.pdf"
-    }
-  ],
-  "c2": [
-    {
-      id: "cds3",
-      name: "GitHub Profile",
-      type: "website",
-      status: "Not extracted",
-      link: "github.com/janedoe"
-    }
-  ],
-  "c3": [
-    {
-      id: "cds4",
-      name: "Industry Conference Presentation",
-      type: "pdf",
-      status: "In queue",
-      filename: "green_energy_presentation.pdf"
-    }
-  ],
-  "c4": [
-    {
-      id: "cds5",
-      name: "Financial Analysis",
-      type: "excel",
-      status: "Extracting",
-      filename: "sarah_financial_analysis.xlsx"
-    }
-  ]
-};
-
-// Sample modules for data sources
-const initialModules: Record<string, Module[]> = {
-  "cds1": [
-    {
-      id: "cm1",
-      title: "Professional Experience",
-      content: "John Smith has over 15 years of experience in the technology sector, with a focus on AI and machine learning applications. Previously served as CTO at Tech Startups Inc. for 5 years before joining Tech Innovations as CEO.",
-      mainIdea: "Career history and professional background",
-      crawledAt: "May 10, 2025"
-    },
-    {
-      id: "cm2",
-      title: "Skills and Expertise",
-      content: "Technical expertise in AI, machine learning, and enterprise software development. Strong background in product strategy and business development. Published author on technology leadership and innovation management.",
-      mainIdea: "Technical and leadership skills overview",
-      crawledAt: "May 10, 2025"
-    }
-  ],
-  "cds2": [
-    {
-      id: "cm3",
-      title: "Education",
-      content: "PhD in Computer Science from Stanford University, specializing in artificial intelligence. MBA from Harvard Business School with focus on technology management.",
-      mainIdea: "Academic credentials and educational background",
-      crawledAt: "May 11, 2025"
-    }
-  ],
-  "cds3": [
-    {
-      id: "cm4",
-      title: "Open Source Contributions",
-      content: "Jane Doe is an active contributor to several major open source projects, including TensorFlow and PyTorch. Has created several popular GitHub repositories focused on natural language processing and computer vision applications.",
-      mainIdea: "Open source development activities and contributions",
-      crawledAt: "May 9, 2025"
-    }
-  ]
-};
-
-// Helper function to find a contact by ID
-const findContactById = (contactId: string): Contact | null => {
-  for (const companyId in initialContacts) {
-    const found = initialContacts[companyId].find(c => c.id === contactId);
-    if (found) return found;
-  }
-  return null;
-};
+import { ExtractedParagraphs } from "../components/ExtractedParagraphs";
+import { DataSourceProcessing } from "../components/DataSourceProcessing";
+import { contactAPI, datasourceAPI, paragraphAPI } from "../services/api";
 
 export const ContactDataSourceDetails = (): JSX.Element => {
   const { contactId, dataSourceId } = useParams<{ contactId: string; dataSourceId: string }>();
@@ -153,46 +19,60 @@ export const ContactDataSourceDetails = (): JSX.Element => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   
+  // State variables
   const [dataSource, setDataSource] = useState<DataSource | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Modal states
   const [editDataSource, setEditDataSource] = useState<DataSource | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [modules, setModules] = useState<Module[]>([]);
 
+  // Fetch data when component mounts
   useEffect(() => {
-    // Fetch contact data
-    if (contactId) {
-      const foundContact = findContactById(contactId);
-      setContact(foundContact);
-    }
+    const fetchData = async () => {
+      if (!contactId || !dataSourceId) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch contact details
+        const contactData = await contactAPI.getContactById(contactId);
+        setContact(contactData);
+        
+        // Fetch datasource details
+        const contactSources = await datasourceAPI.getContactDatasources(contactId);
+        const source = contactSources.find(ds => ds.id === dataSourceId);
+        
+        if (source) {
+          setDataSource(source);
+          
+          // Fetch paragraphs for this datasource
+          const paragraphs = await paragraphAPI.getDataSourceParagraphs(dataSourceId);
+          setModules(paragraphs);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Failed to load data. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    // Fetch data source
-    if (contactId && dataSourceId) {
-      const contactSources = initialContactDataSources[contactId] || [];
-      const foundDataSource = contactSources.find(ds => ds.id === dataSourceId);
-      setDataSource(foundDataSource || null);
-    }
+    fetchData();
   }, [contactId, dataSourceId]);
-
-  // Load modules for this data source
-  useEffect(() => {
-    if (dataSourceId) {
-      setModules(initialModules[dataSourceId] || []);
-    }
-  }, [dataSourceId]);
 
   // Generate breadcrumb items
   const breadcrumbItems = React.useMemo(() => {
     const items = [
       { label: "Home", path: "/" },
+      { label: "Contacts", path: "/contacts" }
     ];
     
     if (contact) {
-      items.push({
-        label: "Contacts",
-        path: "/contacts"
-      });
-      
       items.push({
         label: contact.name,
         path: `/contacts/${contactId}`
@@ -209,43 +89,130 @@ export const ContactDataSourceDetails = (): JSX.Element => {
     return items;
   }, [contact, dataSource, contactId, dataSourceId]);
 
-  const handleEdit = () => {
-    if (dataSource) {
-      setEditDataSource(dataSource);
+  // Process the datasource to extract paragraphs
+  const processDatasource = async () => {
+    if (!dataSourceId) return;
+    
+    try {
+      // Process datasource to extract paragraphs
+      await datasourceAPI.processDatasource(dataSourceId);
+      
+      // Update the status to indicate processing
+      if (dataSource) {
+        setDataSource({
+          ...dataSource,
+          status: 'In queue'
+        });
+      }
+      
+      // Show success message
+      setError(null);
+    } catch (error) {
+      console.error("Error processing datasource:", error);
+      setError("Failed to process datasource. Please try again.");
     }
   };
 
-  const handleDelete = () => {
-    setShowDeleteModal(true);
+  // Update data source
+  const updateDataSource = async (updatedDataSource: DataSource) => {
+    if (!contactId) return;
+    
+    try {
+      setIsLoading(true);
+      // Update datasource in the backend
+      await datasourceAPI.updateContactDatasource(contactId, updatedDataSource);
+      
+      // Update local state
+      setDataSource(updatedDataSource);
+    } catch (error) {
+      console.error("Error updating data source:", error);
+      setError("Failed to update data source. Please try again.");
+    } finally {
+      setEditDataSource(null);
+      setIsLoading(false);
+    }
   };
 
-  const confirmDelete = () => {
-    // In a real app, this would make an API call to delete the data source
-    // For now, just navigate back to the contact page
-    setShowDeleteModal(false);
-    navigate(`/contacts/${contactId}`);
-  };
-
-  const updateDataSource = (updatedDataSource: DataSource) => {
-    // In a real app, this would make an API call to update the data source
-    setDataSource(updatedDataSource);
-    setEditDataSource(null);
-  };
-
+  // Delete data source
   const deleteDataSource = (dataSource: DataSource) => {
     setEditDataSource(null);
     setShowDeleteModal(true);
   };
 
-  // Module handlers
-  const updateModule = (updatedModule: Module) => {
-    setModules(modules.map(module => 
-      module.id === updatedModule.id ? updatedModule : module
-    ));
+  // Confirm deletion
+  const confirmDelete = async () => {
+    if (!contactId || !dataSourceId) return;
+    
+    try {
+      setIsLoading(true);
+      // Delete datasource from the backend
+      await datasourceAPI.deleteContactDatasource(contactId, dataSourceId);
+      
+      // Navigate back to the contact page
+      navigate(`/contacts/${contactId}`);
+    } catch (error) {
+      console.error("Error deleting data source:", error);
+      setError("Failed to delete data source. Please try again.");
+      setIsLoading(false);
+      setShowDeleteModal(false);
+    }
   };
 
-  const deleteModule = (moduleId: string) => {
-    setModules(modules.filter(module => module.id !== moduleId));
+  // Module/Paragraph handlers
+  const updateModule = async (updatedModule: Module) => {
+    try {
+      setIsLoading(true);
+      // Update paragraph in the backend
+      await paragraphAPI.updateParagraph(updatedModule);
+      
+      // Update local state
+      setModules(modules.map(module => 
+        module.id === updatedModule.id ? updatedModule : module
+      ));
+    } catch (error) {
+      console.error("Error updating paragraph:", error);
+      setError("Failed to update paragraph. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteModule = async (moduleId: string) => {
+    try {
+      setIsLoading(true);
+      // Delete paragraph from the backend
+      await paragraphAPI.deleteParagraph(moduleId);
+      
+      // Update local state
+      setModules(modules.filter(module => module.id !== moduleId));
+    } catch (error) {
+console.error("Error deleting paragraph:", error);
+      setError("Failed to delete paragraph. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle processing completion
+  const handleProcessingComplete = async () => {
+    if (!dataSourceId) return;
+    
+    try {
+      // Refresh the datasource status
+      const status = await datasourceAPI.getProcessingStatus(dataSourceId);
+      if (dataSource) {
+        setDataSource({
+          ...dataSource,
+          status: status
+        });
+      }
+      
+      // Fetch updated paragraphs
+      const paragraphs = await paragraphAPI.getDataSourceParagraphs(dataSourceId);
+      setModules(paragraphs);
+    } catch (error) {
+      console.error("Error refreshing data after processing:", error);
+    }
   };
 
   // Get icon based on data source type
@@ -261,18 +228,46 @@ export const ContactDataSourceDetails = (): JSX.Element => {
     }
   };
 
-  // Get status color based on data source status
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Processed': return isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800';
-      case 'Not extracted': return isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
-      case 'In queue': return isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800';
-      case 'Extracting': return isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800';
-      default: return isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
-    }
-  };
+  // Loading state
+  if (isLoading && !dataSource) {
+    return (
+      <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
+        <div className="flex items-center space-x-2">
+          <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
+            Loading datasource details...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
-  if (!dataSource || !contact) {
+  // Error state
+  if (error && !dataSource && !contact) {
+    return (
+      <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
+        <div className="text-center">
+          <div className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>
+            {error}
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className={`${
+              isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
+            }`}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
+  if (!dataSource && !isLoading) {
     return (
       <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen p-6 transition-colors duration-300 flex items-center justify-center`}>
         <p className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -301,12 +296,23 @@ export const ContactDataSourceDetails = (): JSX.Element => {
             }`}
           >
             <ArrowLeftIcon className="w-4 h-4 mr-1" />
-            Back to {contact.name}
+            Back to {contact?.name || 'Contact'}
           </Button>
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            {dataSource.name}
+            {dataSource?.name || 'Data Source Details'}
           </h1>
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div className={`rounded-lg border-l-4 p-4 mb-6 ${
+            isDark 
+            ? "bg-red-900/30 border-red-500 text-red-300" 
+            : "bg-red-50 border-red-500 text-red-700"
+          }`}>
+            <p>{error}</p>
+          </div>
+        )}
 
         {/* Data Source Details Card */}
         <div className={`rounded-lg shadow-md p-6 ${
@@ -319,25 +325,35 @@ export const ContactDataSourceDetails = (): JSX.Element => {
                 <div className={`p-3 rounded-full mr-3 ${
                   isDark ? 'bg-[#201e3d]' : 'bg-gray-100'
                 }`}>
-                  {getTypeIcon(dataSource.type)}
+                  {dataSource && getTypeIcon(dataSource.type)}
                 </div>
                 <div>
                   <h2 className={`text-xl font-semibold ${
                     isDark ? 'text-gray-200' : 'text-gray-700'
                   }`}>
-                    {dataSource.name}
+                    {dataSource?.name || 'Unnamed Data Source'}
                   </h2>
                   <div className="flex items-center mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      getStatusColor(dataSource.status)
-                    }`}>
-                      {dataSource.status}
-                    </span>
-                    <span className={`ml-2 text-sm ${
-                      isDark ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      {dataSource.type.charAt(0).toUpperCase() + dataSource.type.slice(1)}
-                    </span>
+                    {dataSource && (
+                      <>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          dataSource.status === 'Processed' 
+                            ? isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800' 
+                            : dataSource.status === 'Not extracted'
+                              ? isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600'
+                              : dataSource.status === 'In queue'
+                                ? isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
+                                : isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {dataSource.status}
+                        </span>
+                        <span className={`ml-2 text-sm ${
+                          isDark ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {dataSource.type.charAt(0).toUpperCase() + dataSource.type.slice(1)}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -352,7 +368,7 @@ export const ContactDataSourceDetails = (): JSX.Element => {
                   <p className={`${
                     isDark ? 'text-white' : 'text-gray-800'
                   }`}>
-                    {contact.name}
+                    {contact?.name || 'Unknown Contact'}
                   </p>
                 </div>
 
@@ -360,9 +376,9 @@ export const ContactDataSourceDetails = (): JSX.Element => {
                   <h3 className={`text-sm font-medium mb-1 ${
                     isDark ? 'text-gray-400' : 'text-gray-500'
                   }`}>
-                    {dataSource.type === 'website' ? 'URL' : 'Filename'}
+                    {dataSource?.type === 'website' ? 'URL' : 'Filename'}
                   </h3>
-                  {dataSource.type === 'website' && dataSource.link ? (
+                  {dataSource?.type === 'website' && dataSource.link ? (
                     <a 
                       href={dataSource.link.startsWith('http') ? dataSource.link : `https://${dataSource.link}`}
                       target="_blank"
@@ -377,7 +393,7 @@ export const ContactDataSourceDetails = (): JSX.Element => {
                     <p className={`${
                       isDark ? 'text-white' : 'text-gray-800'
                     }`}>
-                      {dataSource.filename || "N/A"}
+                      {dataSource?.filename || "N/A"}
                     </p>
                   )}
                 </div>
@@ -385,100 +401,29 @@ export const ContactDataSourceDetails = (): JSX.Element => {
             </div>
 
             {/* Right Column - Processing Information */}
-            <div className={`p-5 rounded-lg ${
-              isDark ? 'bg-[#201e3d]' : 'bg-gray-50'
-            }`}>
-              <h3 className={`text-lg font-medium mb-3 ${
-                isDark ? 'text-gray-200' : 'text-gray-700'
-              }`}>
-                Processing Information
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className={`text-sm font-medium mb-1 ${
-                    isDark ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    Status
-                  </h4>
-                  <div className={`w-full h-2 rounded-full ${
-                    isDark ? 'bg-[#2e2c50]' : 'bg-gray-200'
-                  }`}>
-                    <div 
-                      className={`h-2 rounded-full ${
-                        dataSource.status === 'Processed' 
-                          ? isDark ? 'bg-green-500' : 'bg-green-600'
-                          : dataSource.status === 'Extracting'
-                            ? isDark ? 'bg-yellow-500' : 'bg-yellow-600'
-                            : dataSource.status === 'In queue'
-                              ? isDark ? 'bg-blue-500' : 'bg-blue-600'
-                              : isDark ? 'bg-gray-700' : 'bg-gray-400'
-                      }`}
-                      style={{ 
-                        width: dataSource.status === 'Processed' 
-                          ? '100%' 
-                          : dataSource.status === 'Extracting'
-                            ? '60%'
-                            : dataSource.status === 'In queue'
-                              ? '30%'
-                              : '0%'
-                      }}
-                    ></div>
-                  </div>
-                  <p className={`mt-1 text-sm ${
-                    isDark ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    {dataSource.status === 'Processed' 
-                      ? 'This data source has been fully processed and is ready for use.'
-                      : dataSource.status === 'Extracting'
-                        ? 'Currently extracting information from this data source.'
-                        : dataSource.status === 'In queue'
-                          ? 'This data source is waiting to be processed.'
-                          : 'This data source has not started processing yet.'}
-                  </p>
-                </div>
-
-                {dataSource.status === 'Processed' && (
-                  <div>
-                    <h4 className={`text-sm font-medium mb-1 ${
-                      isDark ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Processed Date
-                    </h4>
-                    <p className={`${
-                      isDark ? 'text-white' : 'text-gray-800'
-                    }`}>
-                      May 10, 2025
-                    </p>
-                  </div>
-                )}
-
-                {/* Action button for processed data sources */}
-                {dataSource.status === 'Processed' && (
-                  <Button
-                    className={`mt-4 ${
-                      isDark 
-                      ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" 
-                      : "bg-blue-700 hover:bg-blue-800 text-white"
-                    }`}
-                  >
-                    Process Datasource
-                  </Button>
-                )}
-              </div>
-            </div>
+            {dataSource && (
+              <DataSourceProcessing
+                dataSourceId={dataSourceId || ""}
+                status={dataSource.status}
+                processDatasource={processDatasource}
+                isDark={isDark}
+                onProcessingComplete={handleProcessingComplete}
+              />
+            )}
           </div>
         </div>
 
-        {/* Modules Section */}
-        <div className="mt-8">
-          <ModulesSection 
+        {/* Extracted Paragraphs Section */}
+        {dataSource && (
+          <ExtractedParagraphs
             modules={modules}
+            isLoading={isLoading}
             isDark={isDark}
             onUpdateModule={updateModule}
             onDeleteModule={deleteModule}
+            status={dataSource.status}
           />
-        </div>
+        )}
 
         {/* Edit Data Source Sheet */}
         <EditDataSourceSheet
@@ -493,7 +438,7 @@ export const ContactDataSourceDetails = (): JSX.Element => {
         {/* Delete Confirmation Modal */}
         {showDeleteModal && (
           <DeleteConfirmationModal
-            itemName={dataSource.name}
+            itemName={dataSource?.name || 'this datasource'}
             itemType="Data Source"
             onDelete={confirmDelete}
             onCancel={() => setShowDeleteModal(false)}

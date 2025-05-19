@@ -1,7 +1,7 @@
 // src/services/api.ts
 import axios from 'axios';
 import { Module } from '../types/module';
-import { DATASOURCE_ROUTES, PARAGRAPH_ROUTES, COMPANY_ROUTES, CONTACT_ROUTES } from '../api/api-routes';
+import { DATASOURCE_ROUTES, PARAGRAPH_ROUTES, COMPANY_ROUTES, CONTACT_ROUTES, BASE_API_URL } from '../api/api-routes';
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -227,6 +227,32 @@ export const datasourceAPI = {
     }
   },
   
+  // Create a new datasource for a contact
+  createContactDatasource: async (contactId: string, datasource: Omit<DataSource, 'id'>): Promise<DataSource> => {
+    try {
+      const payload = {
+        source_type: datasource.type,
+        name: datasource.name,
+        link: datasource.type === 'website' ? datasource.link : '',
+        file_name: datasource.type !== 'website' ? datasource.filename : ''
+      };
+      
+      const response = await axios.post(DATASOURCE_ROUTES.createContactDataSource(contactId), payload);
+      
+      return {
+        id: response.data.datasource_id.toString(),
+        name: datasource.name,
+        type: datasource.type,
+        status: 'Not extracted',
+        link: datasource.link || '',
+        filename: datasource.filename || ''
+      };
+    } catch (error) {
+      console.error('Error creating contact datasource:', error);
+      throw error;
+    }
+  },
+  
   // Update a datasource for a company
   updateDatasource: async (companyId: string, datasource: DataSource): Promise<DataSource> => {
     try {
@@ -246,12 +272,41 @@ export const datasourceAPI = {
     }
   },
   
+  // Update a datasource for a contact
+  updateContactDatasource: async (contactId: string, datasource: DataSource): Promise<DataSource> => {
+    try {
+      const payload = {
+        source_type: datasource.type,
+        name: datasource.name,
+        link: datasource.type === 'website' ? datasource.link : '',
+        file_name: datasource.type !== 'website' ? datasource.filename : ''
+      };
+      
+      await axios.put(DATASOURCE_ROUTES.updateContactDataSource(contactId, datasource.id), payload);
+      
+      return datasource;
+    } catch (error) {
+      console.error('Error updating contact datasource:', error);
+      throw error;
+    }
+  },
+  
   // Delete a datasource from a company
   deleteCompanyDatasource: async (companyId: string, datasourceId: string): Promise<void> => {
     try {
       await axios.delete(DATASOURCE_ROUTES.deleteCompanyDataSource(companyId, datasourceId));
     } catch (error) {
       console.error('Error deleting datasource:', error);
+      throw error;
+    }
+  },
+  
+  // Delete a datasource from a contact
+  deleteContactDatasource: async (contactId: string, datasourceId: string): Promise<void> => {
+    try {
+      await axios.delete(DATASOURCE_ROUTES.deleteContactDataSource(contactId, datasourceId));
+    } catch (error) {
+      console.error('Error deleting contact datasource:', error);
       throw error;
     }
   },
@@ -307,39 +362,41 @@ export const contactAPI = {
     }
   },
   
-  // Create a new contact for a company
-  createContact: async (companyId: string, contact: Omit<Contact, 'id'>): Promise<Contact> => {
-    try {
-      // Split the name into first name and last name
-      const nameParts = contact.name.split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      
-      const payload = {
-        company_id: parseInt(companyId),
-        first_name: firstName,
-        last_name: lastName,
-        position: contact.position,
-        email: contact.email,
-        phone: contact.phone,
-        notes: contact.notes
-      };
-      
-      const response = await axios.post(CONTACT_ROUTES.createContact(), payload);
-      
-      return {
-        id: response.data.contact_id.toString(),
-        name: `${response.data.first_name} ${response.data.last_name}`,
-        position: response.data.position || '',
-        email: response.data.email || '',
-        phone: response.data.phone || '',
-        notes: response.data.notes || ''
-      };
-    } catch (error) {
-      console.error('Error creating contact:', error);
-      throw error;
-    }
-  },
+// Create a new contact for a company
+createContact: async (companyId: string, contact: Omit<Contact, 'id'>): Promise<Contact> => {
+  try {
+    // Split the name into first name and last name
+    const nameParts = contact.name.trim().split(' ');
+    const firstName = nameParts[0] || 'Unknown';
+    const lastName = nameParts.length > 1 
+      ? nameParts.slice(1).join(' ') 
+      : 'Lastname'; // Default last name
+   
+    const payload = {
+      company_id: parseInt(companyId),
+      first_name: firstName,
+      last_name: lastName,
+      position: contact.position || '',
+      email: contact.email || '',
+      phone: contact.phone || '',
+      notes: contact.notes || ''
+    };
+   
+    const response = await axios.post(`${BASE_API_URL}/contacts/`, payload);
+   
+    return {
+      id: response.data.contact_id.toString(),
+      name: `${response.data.first_name} ${response.data.last_name}`,
+      position: response.data.position || '',
+      email: response.data.email || '',
+      phone: response.data.phone || '',
+      notes: response.data.notes || ''
+    };
+  } catch (error) {
+    console.error('Error creating contact:', error);
+    throw error;
+  }
+},
   
   // Update an existing contact
   updateContact: async (contact: Contact): Promise<Contact> => {
