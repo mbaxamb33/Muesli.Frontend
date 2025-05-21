@@ -1,5 +1,5 @@
 // src/services/api.ts
-import axios from 'axios';
+import apiClient from './apiClient';
 import { Module } from '../types/module';
 import { DATASOURCE_ROUTES, PARAGRAPH_ROUTES, COMPANY_ROUTES, CONTACT_ROUTES, PROJECT_ROUTES, BASE_API_URL } from '../api/api-routes';
 import { projectAPI, datasourceAPI as projectDatasourceAPI } from './projectAPI';
@@ -40,7 +40,7 @@ export const companyAPI = {
   // Get all companies
   getAllCompanies: async (): Promise<Company[]> => {
     try {
-      const response = await axios.get(COMPANY_ROUTES.getAllCompanies());
+      const response = await apiClient.get(COMPANY_ROUTES.getAllCompanies());
       
       // Map the backend response to our frontend Company type
       return response.data.map((company: any) => ({
@@ -61,7 +61,7 @@ export const companyAPI = {
   // Get company by ID
   getCompanyById: async (id: string): Promise<Company> => {
     try {
-      const response = await axios.get(COMPANY_ROUTES.getCompanyById(id));
+      const response = await apiClient.get(COMPANY_ROUTES.getCompanyById(id));
       
       // Map the backend response to our frontend Company type
       return {
@@ -92,7 +92,7 @@ export const companyAPI = {
         status: company.status || 'Active'
       };
       
-      const response = await axios.post(COMPANY_ROUTES.createCompany(), payload);
+      const response = await apiClient.post(COMPANY_ROUTES.createCompany(), payload);
       
       // Return the created company with the ID from the response
       return {
@@ -123,7 +123,7 @@ export const companyAPI = {
         status: company.status || 'Active'
       };
       
-      const response = await axios.put(COMPANY_ROUTES.updateCompany(company.id), payload);
+      const response = await apiClient.put(COMPANY_ROUTES.updateCompany(company.id), payload);
       
       // Return the updated company
       return {
@@ -144,7 +144,7 @@ export const companyAPI = {
   // Delete a company
   deleteCompany: async (id: string): Promise<void> => {
     try {
-      await axios.delete(COMPANY_ROUTES.deleteCompany(id));
+      await apiClient.delete(COMPANY_ROUTES.deleteCompany(id));
     } catch (error) {
       console.error(`Error deleting company with ID ${id}:`, error);
       throw error;
@@ -157,7 +157,7 @@ export const datasourceAPI = {
   // Get all datasources for a company
   getCompanyDatasources: async (companyId: string): Promise<DataSource[]> => {
     try {
-      const response = await axios.get(DATASOURCE_ROUTES.getCompanyDataSources(companyId));
+      const response = await apiClient.get(DATASOURCE_ROUTES.getCompanyDataSources(companyId));
       
       // Map the backend response to our frontend DataSource type
       return response.data.map((datasource: any) => ({
@@ -177,7 +177,7 @@ export const datasourceAPI = {
   // Get all datasources for a contact
   getContactDatasources: async (contactId: string): Promise<DataSource[]> => {
     try {
-      const response = await axios.get(DATASOURCE_ROUTES.getContactDataSources(contactId));
+      const response = await apiClient.get(DATASOURCE_ROUTES.getContactDataSources(contactId));
       
       // Map the backend response to our frontend DataSource type
       return response.data.map((datasource: any) => ({
@@ -204,7 +204,7 @@ export const datasourceAPI = {
         file_name: datasource.type !== 'website' ? datasource.filename : ''
       };
       
-      const response = await axios.post(DATASOURCE_ROUTES.createCompanyDataSource(companyId), payload);
+      const response = await apiClient.post(DATASOURCE_ROUTES.createCompanyDataSource(companyId), payload);
       
       return {
         id: response.data.datasource_id.toString(),
@@ -230,7 +230,7 @@ export const datasourceAPI = {
         file_name: datasource.type !== 'website' ? datasource.filename : ''
       };
       
-      const response = await axios.post(DATASOURCE_ROUTES.createContactDataSource(contactId), payload);
+      const response = await apiClient.post(DATASOURCE_ROUTES.createContactDataSource(contactId), payload);
       
       return {
         id: response.data.datasource_id.toString(),
@@ -256,7 +256,7 @@ export const datasourceAPI = {
         file_name: datasource.type !== 'website' ? datasource.filename : ''
       };
       
-      await axios.put(DATASOURCE_ROUTES.updateCompanyDataSource(companyId, datasource.id), payload);
+      await apiClient.put(DATASOURCE_ROUTES.updateCompanyDataSource(companyId, datasource.id), payload);
       
       return datasource;
     } catch (error) {
@@ -275,7 +275,7 @@ export const datasourceAPI = {
         file_name: datasource.type !== 'website' ? datasource.filename : ''
       };
       
-      await axios.put(DATASOURCE_ROUTES.updateContactDataSource(contactId, datasource.id), payload);
+      await apiClient.put(DATASOURCE_ROUTES.updateContactDataSource(contactId, datasource.id), payload);
       
       return datasource;
     } catch (error) {
@@ -287,7 +287,7 @@ export const datasourceAPI = {
   // Delete a datasource from a company
   deleteCompanyDatasource: async (companyId: string, datasourceId: string): Promise<void> => {
     try {
-      await axios.delete(DATASOURCE_ROUTES.deleteCompanyDataSource(companyId, datasourceId));
+      await apiClient.delete(DATASOURCE_ROUTES.deleteCompanyDataSource(companyId, datasourceId));
     } catch (error) {
       console.error('Error deleting datasource:', error);
       throw error;
@@ -297,7 +297,7 @@ export const datasourceAPI = {
   // Delete a datasource from a contact
   deleteContactDatasource: async (contactId: string, datasourceId: string): Promise<void> => {
     try {
-      await axios.delete(DATASOURCE_ROUTES.deleteContactDataSource(contactId, datasourceId));
+      await apiClient.delete(DATASOURCE_ROUTES.deleteContactDataSource(contactId, datasourceId));
     } catch (error) {
       console.error('Error deleting contact datasource:', error);
       throw error;
@@ -307,7 +307,7 @@ export const datasourceAPI = {
   // Process a datasource (extract data from it)
   processDatasource: async (datasourceId: string): Promise<void> => {
     try {
-      const response = await axios.post(DATASOURCE_ROUTES.processDataSource(datasourceId));
+      const response = await apiClient.post(DATASOURCE_ROUTES.processDataSource(datasourceId));
       
       // Check for successful response
       if (response.status !== 200) {
@@ -324,7 +324,7 @@ export const datasourceAPI = {
   // Get processing status of a datasource
   getProcessingStatus: async (datasourceId: string): Promise<string> => {
     try {
-      const response = await axios.get(DATASOURCE_ROUTES.getDataSourceStatus(datasourceId));
+      const response = await apiClient.get(DATASOURCE_ROUTES.getDataSourceStatus(datasourceId));
       return response.data.status;
     } catch (error) {
       console.error('Error getting processing status:', error);
@@ -338,7 +338,7 @@ export const contactAPI = {
   // Get all contacts for a company
   getCompanyContacts: async (companyId: string): Promise<Contact[]> => {
     try {
-      const response = await axios.get(CONTACT_ROUTES.getCompanyContacts(companyId));
+      const response = await apiClient.get(CONTACT_ROUTES.getCompanyContacts(companyId));
       
       // Map the backend response to our frontend Contact type
       return response.data.map((contact: any) => ({
@@ -375,7 +375,7 @@ export const contactAPI = {
         notes: contact.notes || ''
       };
      
-      const response = await axios.post(`${BASE_API_URL}/contacts/`, payload);
+      const response = await apiClient.post(`${BASE_API_URL}/contacts/`, payload);
      
       return {
         id: response.data.contact_id.toString(),
@@ -408,7 +408,7 @@ export const contactAPI = {
         notes: contact.notes
       };
       
-      const response = await axios.put(CONTACT_ROUTES.updateContact(contact.id), payload);
+      const response = await apiClient.put(CONTACT_ROUTES.updateContact(contact.id), payload);
       
       return {
         id: response.data.contact_id.toString(),
@@ -427,7 +427,7 @@ export const contactAPI = {
   // Delete a contact
   deleteContact: async (contactId: string): Promise<void> => {
     try {
-      await axios.delete(CONTACT_ROUTES.deleteContact(contactId));
+      await apiClient.delete(CONTACT_ROUTES.deleteContact(contactId));
     } catch (error) {
       console.error('Error deleting contact:', error);
       throw error;
@@ -437,7 +437,7 @@ export const contactAPI = {
   // Get contact by ID
   getContactById: async (contactId: string): Promise<Contact> => {
     try {
-      const response = await axios.get(CONTACT_ROUTES.getContactById(contactId));
+      const response = await apiClient.get(CONTACT_ROUTES.getContactById(contactId));
       
       return {
         id: response.data.contact_id.toString(),
@@ -459,7 +459,7 @@ export const paragraphAPI = {
   // Get all paragraphs for a datasource
   getDataSourceParagraphs: async (datasourceId: string): Promise<Module[]> => {
     try {
-      const response = await axios.get(PARAGRAPH_ROUTES.getDataSourceParagraphs(datasourceId));
+      const response = await apiClient.get(PARAGRAPH_ROUTES.getDataSourceParagraphs(datasourceId));
       
       // Handle empty response
       if (!response.data || response.data.length === 0) {
@@ -480,9 +480,9 @@ export const paragraphAPI = {
       console.error('Error fetching paragraphs:', error);
       
       // Return empty array instead of throwing error to handle 404 gracefully
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
-        return [];
-      }
+      // if (error.response?.status === 404) {
+      //   return [];
+      // }
       
       throw error;
     }
@@ -497,7 +497,7 @@ export const paragraphAPI = {
         main_idea: paragraph.mainIdea
       };
       
-      const response = await axios.put(PARAGRAPH_ROUTES.updateParagraph(paragraph.id), payload);
+      const response = await apiClient.put(PARAGRAPH_ROUTES.updateParagraph(paragraph.id), payload);
       
       return {
         id: response.data.paragraph_id.toString(),
@@ -515,7 +515,7 @@ export const paragraphAPI = {
   // Delete a paragraph
   deleteParagraph: async (paragraphId: string): Promise<void> => {
     try {
-      await axios.delete(PARAGRAPH_ROUTES.deleteParagraph(paragraphId));
+      await apiClient.delete(PARAGRAPH_ROUTES.deleteParagraph(paragraphId));
     } catch (error) {
       console.error('Error deleting paragraph:', error);
       throw error;
@@ -532,7 +532,7 @@ export const paragraphAPI = {
         main_idea: paragraph.mainIdea
       };
       
-      const response = await axios.post(PARAGRAPH_ROUTES.createParagraph(), payload);
+      const response = await apiClient.post(PARAGRAPH_ROUTES.createParagraph(), payload);
       
       return {
         id: response.data.paragraph_id.toString(),
