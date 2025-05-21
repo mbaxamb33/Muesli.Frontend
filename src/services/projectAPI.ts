@@ -1,5 +1,5 @@
 // src/services/projectAPI.ts
-import axios from 'axios';
+import apiClient from './apiClient';  // Use apiClient instead of axios
 import { Project } from '../pages/Projects';
 import { DataSource } from '../components/DatasourcesTable';
 import { PROJECT_ROUTES, DATASOURCE_ROUTES, BASE_API_URL } from '../api/api-routes';
@@ -9,7 +9,7 @@ export const projectAPI = {
   // Get all projects for the current user
   getAllProjects: async (): Promise<Project[]> => {
     try {
-      const response = await axios.get(PROJECT_ROUTES.getAllProjects());
+      const response = await apiClient.get(PROJECT_ROUTES.getAllProjects());
       
       // Map the backend response to our frontend Project type
       return response.data.map((project: any) => ({
@@ -30,7 +30,7 @@ export const projectAPI = {
   // Get project by ID
   getProjectById: async (id: string): Promise<Project> => {
     try {
-      const response = await axios.get(PROJECT_ROUTES.getProjectById(id));
+      const response = await apiClient.get(PROJECT_ROUTES.getProjectById(id));
       
       // Map the backend response to our frontend Project type
       const project = {
@@ -67,7 +67,7 @@ export const projectAPI = {
         main_idea: project.description
       };
       
-      const response = await axios.post(PROJECT_ROUTES.createProject(), payload);
+      const response = await apiClient.post(PROJECT_ROUTES.createProject(), payload);
       
       // Return the created project with the ID from the response
       return {
@@ -94,7 +94,7 @@ export const projectAPI = {
         main_idea: project.description
       };
       
-      const response = await axios.put(PROJECT_ROUTES.updateProject(project.id), payload);
+      const response = await apiClient.put(PROJECT_ROUTES.updateProject(project.id), payload);
       
       // Return the updated project
       return {
@@ -113,7 +113,7 @@ export const projectAPI = {
   // Delete a project
   deleteProject: async (id: string): Promise<void> => {
     try {
-      await axios.delete(PROJECT_ROUTES.deleteProject(id));
+      await apiClient.delete(PROJECT_ROUTES.deleteProject(id));
     } catch (error) {
       console.error(`Error deleting project with ID ${id}:`, error);
       throw error;
@@ -126,7 +126,7 @@ export const datasourceAPI = {
   // Get all datasources for a project
   getProjectDatasources: async (projectId: string): Promise<DataSource[]> => {
     try {
-      const response = await axios.get(DATASOURCE_ROUTES.getProjectDataSources(projectId));
+      const response = await apiClient.get(DATASOURCE_ROUTES.getProjectDataSources(projectId));
       
       // Map the backend response to our frontend DataSource type
       return response.data.map((datasource: any) => ({
@@ -153,7 +153,7 @@ export const datasourceAPI = {
         file_name: datasource.type !== 'website' ? datasource.filename : ''
       };
       
-      const response = await axios.post(DATASOURCE_ROUTES.createProjectDataSource(projectId), payload);
+      const response = await apiClient.post(DATASOURCE_ROUTES.createProjectDataSource(projectId), payload);
       
       return {
         id: response.data.datasource_id.toString(),
@@ -179,7 +179,7 @@ export const datasourceAPI = {
         file_name: datasource.type !== 'website' ? datasource.filename : ''
       };
       
-      await axios.put(DATASOURCE_ROUTES.updateProjectDataSource(projectId, datasource.id), payload);
+      await apiClient.put(DATASOURCE_ROUTES.updateProjectDataSource(projectId, datasource.id), payload);
       
       return datasource;
     } catch (error) {
@@ -191,7 +191,7 @@ export const datasourceAPI = {
   // Delete a datasource from a project
   deleteProjectDatasource: async (projectId: string, datasourceId: string): Promise<void> => {
     try {
-      await axios.delete(DATASOURCE_ROUTES.deleteProjectDataSource(projectId, datasourceId));
+      await apiClient.delete(DATASOURCE_ROUTES.deleteProjectDataSource(projectId, datasourceId));
     } catch (error) {
       console.error('Error deleting project datasource:', error);
       throw error;
@@ -199,26 +199,38 @@ export const datasourceAPI = {
   },
   
   // Process a datasource (extract data from it)
-  processDatasource: async (datasourceId: string): Promise<void> => {
-    try {
-      const response = await axios.post(DATASOURCE_ROUTES.processDataSource(datasourceId));
-      
-      // Check for successful response
-      if (response.status !== 200) {
-        throw new Error(`Processing failed with status: ${response.status}`);
-      }
-      
-      return response.data;
-    } catch (error) {
-      console.error('Error processing datasource:', error);
-      throw error;
+processDatasource: async (datasourceId: string): Promise<void> => {
+  try {
+    // Include datasource_id in the request body as expected by the server
+    const payload = {
+      datasource_id: parseInt(datasourceId) // Convert string ID to integer
+    };
+    
+    const response = await apiClient.post(DATASOURCE_ROUTES.processDataSource(datasourceId), payload);
+    
+    // Better check for successful response
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`Processing failed with status: ${response.status}`);
     }
-  },
+    
+    return response.data;
+  } catch (error: any) {
+    // More detailed error logging
+    console.error('Error processing datasource:', error);
+    
+    // Log server error details if available
+    if (error.response?.data) {
+      console.error('Server error details:', error.response.data);
+    }
+    
+    throw error;
+  }
+},
   
   // Get processing status of a datasource
   getProcessingStatus: async (datasourceId: string): Promise<string> => {
     try {
-      const response = await axios.get(DATASOURCE_ROUTES.getDataSourceStatus(datasourceId));
+      const response = await apiClient.get(DATASOURCE_ROUTES.getDataSourceStatus(datasourceId));
       return response.data.status;
     } catch (error) {
       console.error('Error getting processing status:', error);

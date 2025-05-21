@@ -305,21 +305,33 @@ export const datasourceAPI = {
   },
   
   // Process a datasource (extract data from it)
-  processDatasource: async (datasourceId: string): Promise<void> => {
-    try {
-      const response = await apiClient.post(DATASOURCE_ROUTES.processDataSource(datasourceId));
-      
-      // Check for successful response
-      if (response.status !== 200) {
-        throw new Error(`Processing failed with status: ${response.status}`);
-      }
-      
-      return response.data;
-    } catch (error) {
-      console.error('Error processing datasource:', error);
-      throw error;
+processDatasource: async (datasourceId: string): Promise<void> => {
+  try {
+    // Include datasource_id in the request body as expected by the server
+    const payload = {
+      datasource_id: parseInt(datasourceId) // Convert string ID to integer
+    };
+    
+    const response = await apiClient.post(DATASOURCE_ROUTES.processDataSource(datasourceId), payload);
+    
+    // Better check for successful response
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`Processing failed with status: ${response.status}`);
     }
-  },
+    
+    return response.data;
+  } catch (error: any) {
+    // More detailed error logging
+    console.error('Error processing datasource:', error);
+    
+    // Log server error details if available
+    if (error.response?.data) {
+      console.error('Server error details:', error.response.data);
+    }
+    
+    throw error;
+  }
+},
   
   // Get processing status of a datasource
   getProcessingStatus: async (datasourceId: string): Promise<string> => {
