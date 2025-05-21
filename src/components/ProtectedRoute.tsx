@@ -6,14 +6,18 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
   const { isAuthenticated } = useAuth();
   
   useEffect(() => {
-    // If not authenticated, redirect to backend login endpoint immediately
+    // If not authenticated, redirect directly to backend login
     if (!isAuthenticated) {
-      // Redirect to your backend login endpoint (which triggers Cognito)
-      window.location.href = '/login';
+      // Get the current path for redirect after login
+      const currentPath = window.location.pathname + window.location.search;
+      const encodedReturnUrl = encodeURIComponent(currentPath);
+      
+      // Redirect to backend login with return URL
+      window.location.href = `http://localhost:8080/login?returnUrl=${encodedReturnUrl}`;
     }
   }, [isAuthenticated]);
   
-  // If not authenticated, show a loading state while redirecting
+  // While redirecting, show loading
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -25,6 +29,6 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
     );
   }
   
-  // If authenticated, render the children components
+  // If authenticated, render children
   return <>{children}</>;
 };
