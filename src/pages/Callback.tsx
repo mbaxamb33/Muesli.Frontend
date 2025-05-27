@@ -37,32 +37,41 @@ export const Callback = (): JSX.Element => {
           refreshToken
         });
 
-        // Try to create/get user in your database
+        // Try to create user record in database
         try {
-          // Decode the ID token to get user info (basic decode without verification)
           const tokenPayload = JSON.parse(atob(idToken.split('.')[1]));
-          const userInfo = {
-            cognito_sub: tokenPayload.sub,
-            email: tokenPayload.email,
-            first_name: tokenPayload.given_name || 'Unknown',
-            last_name: tokenPayload.family_name || 'User'
-          };
-
-          // Try to create user (will fail silently if user exists)
+          console.log('Token payload:', tokenPayload);
+          
+          // Try to get existing user first
           try {
-            await apiClient.post('/api/v1/users/', userInfo);
-            console.log('User created successfully');
-          } catch (userError: any) {
-            // User might already exist, that's OK
-            if (userError.response?.status !== 409) {
-              console.log('User creation result:', userError.response?.status);
+            const existingUser = await apiClient.get('/api/v1/users/me');
+            console.log('User already exists:', existingUser.data);
+          } catch (userCheckError: any) {
+            if (userCheckError.response?.status === 404) {
+              // User doesn't exist, create them with backend's expected structure
+              console.log('Creating new user in database...');
+              const firstName = tokenPayload.given_name || 'User';
+              const lastName = tokenPayload.family_name || 'Name';
+              const username = `${firstName}${lastName}`.toLowerCase().replace(/\s+/g, '');
+              
+              const userInfo = {
+                cognito_sub: tokenPayload.sub,
+                username: username,
+                password: 'cognito_managed' // Placeholder since Cognito handles auth
+              };
+              
+              const newUser = await apiClient.post('/api/v1/users/', userInfo);
+              console.log('User created successfully:', newUser.data);
+            } else {
+              console.error('Error checking user:', userCheckError);
             }
           }
-        } catch (userCreationError) {
-          console.error('Error handling user creation:', userCreationError);
+        } catch (userError) {
+          console.error('Error handling user creation:', userError);
           // Don't block login for user creation issues
         }
         
+        console.log('Redirecting to:', returnUrl);
         // Redirect to the return URL or dashboard
         navigate(returnUrl, { replace: true });
         

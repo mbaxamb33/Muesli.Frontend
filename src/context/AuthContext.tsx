@@ -1,4 +1,4 @@
-// Modified src/context/AuthContext.tsx
+// Modified src/context/AuthContext.tsx - Fixed logout
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -57,18 +57,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    console.log('Logout called - clearing tokens and redirecting');
+    
     // Remove tokens from localStorage
     localStorage.removeItem('accessToken');
     localStorage.removeItem('idToken');
     localStorage.removeItem('refreshToken');
     
-    // Update state
+    // Update state immediately
     setAccessToken(null);
     setIdToken(null);
     setRefreshToken(null);
     setIsAuthenticated(false);
     
-    // Force a full page reload to ensure all state is cleared
+    // Force immediate redirect
     window.location.href = 'http://localhost:8080/login';
   };
 

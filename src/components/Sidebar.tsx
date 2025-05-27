@@ -71,11 +71,21 @@ import {
       },
     ];
 
+    
     // Handle logout
-    const handleLogout = () => {
-      logout(); // This will clear tokens and redirect to login
+    const handleLogout = async () => {
+      console.log('Logout button clicked');
+      
+      try {
+        // Call logout from auth context
+        logout();
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Force redirect even if logout fails
+        window.location.href = 'http://localhost:8080/login';
+      }
     };
-  
+      
     return (
       <aside className={`relative w-60 h-screen ${isDark ? 'bg-[#17162e]' : 'bg-white'} flex flex-col transition-colors duration-300`}>
         {/* Logo Header */}
