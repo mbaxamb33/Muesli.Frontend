@@ -80,35 +80,36 @@ export const companyAPI = {
   },
   
   // Create a new company
-  createCompany: async (company: Omit<Company, 'id'>): Promise<Company> => {
-    try {
-      // Map our frontend Company type to the backend expected format
-      const payload = {
-        company_name: company.name,
-        industry: company.industry,
-        website: company.website,
-        address: company.address,
-        description: company.notes,
-        status: company.status || 'Active'
-      };
-      
-      const response = await apiClient.post(COMPANY_ROUTES.createCompany(), payload);
-      
-      // Return the created company with the ID from the response
-      return {
-        id: response.data.company_id.toString(),
-        name: response.data.company_name,
-        industry: response.data.industry || '',
-        website: response.data.website || '',
-        address: response.data.address || '',
-        notes: response.data.description || '',
-        status: response.data.status || 'Active'
-      };
-    } catch (error) {
-      console.error('Error creating company:', error);
-      throw error;
-    }
-  },
+// Fixed createCompany function in src/services/api.ts
+createCompany: async (company: Omit<Company, 'id'>): Promise<Company> => {
+  try {
+    // Backend expects these exact fields (NO status field)
+    const payload = {
+      company_name: company.name,
+      industry: company.industry,
+      website: company.website,
+      address: company.address,
+      description: company.notes
+      // Remove status - backend doesn't expect it
+    };
+    
+    const response = await apiClient.post(COMPANY_ROUTES.createCompany(), payload);
+    
+    // Return the created company with the ID from the response
+    return {
+      id: response.data.company_id.toString(),
+      name: response.data.company_name,
+      industry: response.data.industry || '',
+      website: response.data.website || '',
+      address: response.data.address || '',
+      notes: response.data.description || '',
+      status: 'Active' // Set default status since backend doesn't manage it
+    };
+  } catch (error) {
+    console.error('Error creating company:', error);
+    throw error;
+  }
+},
   
   // Update an existing company
   updateCompany: async (company: Company): Promise<Company> => {

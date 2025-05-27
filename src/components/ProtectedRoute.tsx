@@ -1,4 +1,4 @@
-// src/components/ProtectedRoute.tsx
+// Modified src/components/ProtectedRoute.tsx
 import React, { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -12,7 +12,9 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
       const currentPath = window.location.pathname + window.location.search;
       const encodedReturnUrl = encodeURIComponent(currentPath);
       
-      // Redirect to backend login with return URL
+      console.log("Not authenticated, redirecting to login...");
+      
+      // Hard redirect to backend login with return URL
       window.location.href = `http://localhost:8080/login?returnUrl=${encodedReturnUrl}`;
     }
   }, [isAuthenticated]);

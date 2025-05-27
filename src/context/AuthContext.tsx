@@ -1,4 +1,5 @@
-// src/context/AuthContext.tsx
+// Modified src/context/AuthContext.tsx
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
@@ -67,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRefreshToken(null);
     setIsAuthenticated(false);
     
-    // Redirect to login page
+    // Force a full page reload to ensure all state is cleared
     window.location.href = 'http://localhost:8080/login';
   };
 

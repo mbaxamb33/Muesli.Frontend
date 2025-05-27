@@ -16,9 +16,11 @@ import {
   import { Button } from "../components/components/button";
   import { Switch } from "../components/components/switch";
   import { useTheme } from "../context/ThemeContext";
+  import { useAuth } from "../context/AuthContext"; // Add this import
   
   export const Sidebar = (): JSX.Element => {
     const { theme, toggleTheme } = useTheme();
+    const { logout } = useAuth(); // Add this hook
     const isDark = theme === "dark";
     const location = useLocation();
   
@@ -63,16 +65,16 @@ import {
         path: "/settings"
       },
       { 
-        icon: <LogOutIcon className="w-4 h-4" />, 
-        label: "Sign out",
-        path: "/signout"
-      },
-      { 
         icon: <HelpCircleIcon className="w-4 h-4" />, 
         label: "Help",
         path: "/help"
       },
     ];
+
+    // Handle logout
+    const handleLogout = () => {
+      logout(); // This will clear tokens and redirect to login
+    };
   
     return (
       <aside className={`relative w-60 h-screen ${isDark ? 'bg-[#17162e]' : 'bg-white'} flex flex-col transition-colors duration-300`}>
@@ -178,6 +180,24 @@ import {
                 )}
               </NavLink>
             ))}
+
+            {/* Sign out button - FIXED */}
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className={`w-full h-[31px] justify-start px-2 py-1.5 rounded-lg transition-colors duration-300 mb-3 ${
+                isDark
+                  ? "text-neutral-100 hover:bg-[#201e3d] hover:text-white"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-blue-700"
+              }`}
+            >
+              <span className={`${isDark ? "text-neutral-100" : "text-gray-700"} transition-colors duration-300`}>
+                <LogOutIcon className="w-4 h-4" />
+              </span>
+              <span className="ml-2 font-normal text-sm tracking-[-0.56px]">
+                Sign out
+              </span>
+            </Button>
           </div>
   
           {/* Dark mode toggle */}
