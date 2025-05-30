@@ -16,6 +16,7 @@ import {
   Meetings,
   Settings,
   Help,
+  Briefs,
   CompanyDetails,
   ProjectDetails,
   DataSourceDetails,
@@ -45,6 +46,7 @@ export const App = (): JSX.Element => {
               <Route path="clients/:companyId/datasources/:dataSourceId" element={<DataSourceDetails />} />
               <Route path="contacts/:contactId" element={<ContactDetails />} />
               <Route path="contacts/:contactId/datasources/:dataSourceId" element={<ContactDataSourceDetails />} />
+              <Route path="/briefs" element={<Briefs />} />
               <Route path="opportunities" element={<Opportunities />} />
               <Route path="projects" element={<Projects />} />
               <Route path="projects/:projectId" element={<ProjectDetails />} />

@@ -10,6 +10,7 @@ import {
     CheckSquareIcon,
     CalendarIcon,
     LayoutDashboardIcon,
+    FileTextIcon, // Add this import for Briefs icon
   } from "lucide-react";
   import React from "react";
   import { NavLink, useLocation } from "react-router-dom";
@@ -35,6 +36,11 @@ import {
         icon: <UsersIcon className="w-4 h-4" />, 
         label: "Clients",
         path: "/clients"
+      },
+       { 
+    icon: <FileTextIcon className="w-4 h-4" />, 
+    label: "Briefs",
+    path: "/briefs"
       },
       { 
         icon: <BriefcaseIcon className="w-4 h-4" />, 

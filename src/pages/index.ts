@@ -5,6 +5,7 @@ export { CompanyDetails } from './CompanyDetails';
 export { DataSourceDetails } from './DataSourceDetails';
 export { ContactDetails } from './ContactDetails';
 export { ContactDataSourceDetails } from './ContactDatasourceDetails';
+export { Briefs } from './Briefs'; // Add this line
 export { Opportunities } from './Opportunities';
 export { Projects } from './Projects';
 export { ProjectDetails } from './ProjectDetails';
