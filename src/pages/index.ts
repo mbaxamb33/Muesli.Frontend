@@ -14,3 +14,4 @@ export { Meetings } from './Meetings';
 export { Settings } from './Settings';
 export { Help } from './Help';
 export { ProjectDataSourceDetails } from './ProjectDatasourceDetails';
+export { BriefDetails } from './BriefDetails'; // Add this line
