@@ -1,13 +1,20 @@
-// src/pages/BriefManager.tsx - Manager for all briefs of a company/project
+// src/pages/BriefManager.tsx - Updated to use ComprehensiveGroundTruth
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/components/button";
-import { ArrowLeftIcon, SearchIcon, PlusIcon, Building2, FolderOpen } from "lucide-react";
+import { 
+  ArrowLeftIcon, 
+  SearchIcon, 
+  PlusIcon, 
+  Building2, 
+  FolderOpen
+} from "lucide-react";
 import { Breadcrumb } from "../components/Breadcrumb";
 import { BriefCard } from "../components/BriefCard";
 import { BriefTaskSection } from "../components/BriefTaskSection";
 import { AddBriefCard } from "../components/AddBriefCard";
+import { ComprehensiveGroundTruth } from "../components/ComprehensiveGroundTruth";
 import { Brief } from "../types/brief";
 import { BriefTask } from "../types/briefDetails";
 
@@ -196,6 +203,7 @@ export const BriefManager = (): JSX.Element => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showAddBrief, setShowAddBrief] = useState(false);
+  const [isGroundTruthExpanded, setIsGroundTruthExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -241,7 +249,7 @@ export const BriefManager = (): JSX.Element => {
     
     if (entityInfo) {
       items.push({
-        label: entityInfo.name,
+        label: `${entityInfo.name} Brief Center`,
         path: `/briefs/${entityType}/${entityId}`
       });
     }
@@ -324,7 +332,7 @@ export const BriefManager = (): JSX.Element => {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           <span className={`text-xl ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            Loading briefs...
+            Loading brief center...
           </span>
         </div>
       </div>
@@ -394,7 +402,7 @@ export const BriefManager = (): JSX.Element => {
                 <h1 className={`text-2xl font-bold ${
                   isDark ? 'text-white' : 'text-gray-800'
                 }`}>
-                  {entityInfo.name}
+                  {entityInfo.name} Brief Center
                 </h1>
                 <p className={`text-sm ${
                   isDark ? 'text-gray-300' : 'text-gray-600'
@@ -454,6 +462,14 @@ export const BriefManager = (): JSX.Element => {
             </div>
           </div>
         </div>
+
+        {/* Comprehensive Ground Truth Section */}
+        <ComprehensiveGroundTruth
+          groundTruthData={[]} // Empty array will trigger the use of mock data
+          isDark={isDark}
+          isExpanded={isGroundTruthExpanded}
+          onToggle={() => setIsGroundTruthExpanded(!isGroundTruthExpanded)}
+        />
 
         {/* Tasks Section */}
         <div className="mb-6">
