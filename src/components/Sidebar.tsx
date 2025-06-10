@@ -1,3 +1,4 @@
+// src/components/Sidebar.tsx - Updated with Briefs menu item
 import {
     HelpCircleIcon,
     LogOutIcon,
@@ -10,18 +11,18 @@ import {
     CheckSquareIcon,
     CalendarIcon,
     LayoutDashboardIcon,
-    FileTextIcon, // Add this import for Briefs icon
+    FileTextIcon, // Icon for Briefs
   } from "lucide-react";
   import React from "react";
   import { NavLink, useLocation } from "react-router-dom";
   import { Button } from "../components/components/button";
   import { Switch } from "../components/components/switch";
   import { useTheme } from "../context/ThemeContext";
-  import { useAuth } from "../context/AuthContext"; // Add this import
+  import { useAuth } from "../context/AuthContext";
   
   export const Sidebar = (): JSX.Element => {
     const { theme, toggleTheme } = useTheme();
-    const { logout } = useAuth(); // Add this hook
+    const { logout } = useAuth();
     const isDark = theme === "dark";
     const location = useLocation();
   
@@ -37,10 +38,10 @@ import {
         label: "Clients",
         path: "/clients"
       },
-       { 
-    icon: <FileTextIcon className="w-4 h-4" />, 
-    label: "Briefs",
-    path: "/briefs"
+      { 
+        icon: <FileTextIcon className="w-4 h-4" />, 
+        label: "Briefs", // Changed to just "Briefs" as requested
+        path: "/briefs"
       },
       { 
         icon: <BriefcaseIcon className="w-4 h-4" />, 
@@ -197,7 +198,7 @@ import {
               </NavLink>
             ))}
 
-            {/* Sign out button - FIXED */}
+            {/* Sign out button */}
             <Button
               variant="ghost"
               onClick={handleLogout}

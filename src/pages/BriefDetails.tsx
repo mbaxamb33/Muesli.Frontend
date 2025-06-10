@@ -1,120 +1,168 @@
-// src/pages/BriefDetails.tsx
+// src/pages/BriefDetails.tsx - Individual Brief Details Page
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/components/button";
-import { ArrowLeftIcon, SearchIcon, DownloadIcon, Plus } from "lucide-react";
+import { ArrowLeftIcon, EditIcon, DownloadIcon, Share2Icon } from "lucide-react";
 import { Breadcrumb } from "../components/Breadcrumb";
-import { BriefCard } from "../components/BriefCard";
 import { BriefTaskSection } from "../components/BriefTaskSection";
-import { BriefProcess, Brief, BriefTask } from "../types/briefDetails";
+import { Brief } from "../types/brief";
+import { BriefTask } from "../types/briefDetails";
 
-// Mock data for brief process
-const mockBriefProcess: BriefProcess = {
-  id: "1",
-  title: "General Dynamics Strategic Defense Initiative",
-  description: "Comprehensive strategic analysis and expansion planning for General Dynamics' next-generation defense technologies and market positioning.",
-  tags: ["Strategy", "Defense", "Market Analysis", "High Priority"],
-  progress: 65,
-  status: "In Progress",
-  clientName: "General Dynamics",
-  projectType: "Strategic Planning",
-  createdAt: "2025-05-10T09:00:00Z",
-  lastUpdated: "2025-05-29T14:30:00Z",
-  tasks: [
-    {
-      id: "t1",
-      title: "Market Research & Competitive Analysis",
-      status: "Complete",
-      assignee: "Sarah Chen",
-      dueDate: "2025-05-25T00:00:00Z",
-      priority: "High",
-      description: "Analyze current market trends and competitor positioning"
-    },
-    {
-      id: "t2",
-      title: "Technology Assessment Report",
-      status: "In Progress",
-      assignee: "Michael Rodriguez",
-      dueDate: "2025-06-02T00:00:00Z",
-      priority: "Critical",
-      description: "Evaluate emerging technologies and their strategic implications"
-    },
-    {
-      id: "t3",
-      title: "Financial Impact Analysis",
-      status: "In Progress",
-      assignee: "Jennifer Kim",
-      dueDate: "2025-06-05T00:00:00Z",
-      priority: "High",
-      description: "Assess financial implications of strategic recommendations"
-    },
-    {
-      id: "t4",
-      title: "Stakeholder Presentation Prep",
-      status: "Pending",
-      assignee: "David Thompson",
-      dueDate: "2025-06-10T00:00:00Z",
-      priority: "Medium",
-      description: "Prepare executive presentation materials"
-    },
-    {
-      id: "t5",
-      title: "Risk Assessment Framework",
-      status: "Blocked",
-      assignee: "Lisa Park",
-      dueDate: "2025-06-08T00:00:00Z",
-      priority: "Critical",
-      description: "Develop comprehensive risk assessment methodology"
-    }
-  ],
-  relatedBriefs: [
-    {
-      id: "1",
-      clientName: "General Dynamics",
-      projectType: "Product Expansion",
-      progress: 60,
-      status: "In Progress",
-      lastUpdated: "2025-05-29T10:30:00Z",
-      tags: ["Ack", "High Priority"],
-      description: "Strategic analysis for expanding into new defense markets",
-      createdAt: "2025-05-15T09:00:00Z"
-    },
-    {
-      id: "2",
-      clientName: "General Dynamics",
-      projectType: "Technology Assessment",
-      progress: 85,
-      status: "Review",
-      lastUpdated: "2025-05-28T14:45:00Z",
-      tags: ["Technology", "Review"],
-      description: "Assessment of emerging defense technologies",
-      createdAt: "2025-05-12T11:00:00Z"
-    },
-    {
-      id: "3",
-      clientName: "General Dynamics",
-      projectType: "Market Analysis",
-      progress: 40,
-      status: "In Progress",
-      lastUpdated: "2025-05-27T16:20:00Z",
-      tags: ["Market", "Analysis"],
-      description: "Comprehensive market positioning analysis",
-      createdAt: "2025-05-18T13:30:00Z"
-    },
-    {
-      id: "4",
-      clientName: "General Dynamics",
-      projectType: "Financial Planning",
-      progress: 25,
-      status: "Draft",
-      lastUpdated: "2025-05-26T12:15:00Z",
-      tags: ["Finance", "Planning"],
-      description: "Strategic financial planning and forecasting",
-      createdAt: "2025-05-20T08:45:00Z"
-    }
-  ]
+// Extended brief details interface
+interface BriefDetailData extends Brief {
+  content: string;
+  objectives: string[];
+  methodology: string;
+  findings: string;
+  recommendations: string[];
+  attachments: Array<{
+    id: string;
+    name: string;
+    type: string;
+    size: string;
+    uploadedAt: string;
+  }>;
+  timeline: Array<{
+    id: string;
+    event: string;
+    date: string;
+    status: 'completed' | 'in-progress' | 'pending';
+  }>;
+}
+
+// Mock data for individual brief details
+const mockBriefDetails: Record<string, BriefDetailData> = {
+  "b1": {
+    id: "b1",
+    clientName: "General Dynamics",
+    projectType: "Strategic Defense Analysis",
+    progress: 75,
+    status: "In Progress",
+    lastUpdated: "2025-05-29T10:30:00Z",
+    tags: ["Strategy", "Defense", "High Priority"],
+    description: "Comprehensive strategic analysis for next-generation defense technologies",
+    createdAt: "2025-05-15T09:00:00Z",
+    content: "This strategic defense analysis focuses on evaluating emerging technologies and their potential applications in modern defense systems. The analysis encompasses market trends, technological capabilities, competitive landscape, and strategic recommendations for positioning in the evolving defense sector.",
+    objectives: [
+      "Assess current market trends in defense technology",
+      "Evaluate competitive positioning and opportunities",
+      "Identify emerging technologies with strategic potential",
+      "Develop recommendations for technology investments",
+      "Create roadmap for market expansion"
+    ],
+    methodology: "The analysis employs a multi-faceted approach combining market research, technology assessment, competitive analysis, and stakeholder interviews. Primary data collection includes surveys with industry experts, while secondary research covers market reports, patent filings, and regulatory documentation.",
+    findings: "The defense technology market is experiencing rapid transformation driven by AI, autonomous systems, and cybersecurity demands. Key findings indicate significant opportunities in emerging markets, with particular strength in areas where General Dynamics has existing capabilities. The competitive landscape shows consolidation trends that present both challenges and opportunities.",
+    recommendations: [
+      "Accelerate investment in AI-driven defense systems",
+      "Expand partnerships with emerging technology companies",
+      "Strengthen cybersecurity capabilities across all platforms",
+      "Develop next-generation autonomous systems",
+      "Increase presence in international markets"
+    ],
+    attachments: [
+      {
+        id: "a1",
+        name: "Market Analysis Report.pdf",
+        type: "PDF",
+        size: "2.4 MB",
+        uploadedAt: "2025-05-20T10:00:00Z"
+      },
+      {
+        id: "a2",
+        name: "Competitive Landscape.xlsx",
+        type: "Excel",
+        size: "1.8 MB",
+        uploadedAt: "2025-05-22T14:30:00Z"
+      },
+      {
+        id: "a3",
+        name: "Technology Assessment.docx",
+        type: "Word",
+        size: "3.1 MB",
+        uploadedAt: "2025-05-25T09:15:00Z"
+      }
+    ],
+    timeline: [
+      {
+        id: "t1",
+        event: "Project Initiation",
+        date: "2025-05-15T09:00:00Z",
+        status: "completed"
+      },
+      {
+        id: "t2",
+        event: "Market Research Phase",
+        date: "2025-05-20T10:00:00Z",
+        status: "completed"
+      },
+      {
+        id: "t3",
+        event: "Stakeholder Interviews",
+        date: "2025-05-25T14:00:00Z",
+        status: "completed"
+      },
+      {
+        id: "t4",
+        event: "Analysis & Synthesis",
+        date: "2025-05-30T10:00:00Z",
+        status: "in-progress"
+      },
+      {
+        id: "t5",
+        event: "Final Report Preparation",
+        date: "2025-06-05T09:00:00Z",
+        status: "pending"
+      },
+      {
+        id: "t6",
+        event: "Client Presentation",
+        date: "2025-06-10T14:00:00Z",
+        status: "pending"
+      }
+    ]
+  }
 };
+
+// Mock tasks for this specific brief
+const mockBriefTasks: BriefTask[] = [
+  {
+    id: "bt1",
+    title: "Complete market trend analysis",
+    status: "Complete",
+    assignee: "Sarah Chen",
+    dueDate: "2025-05-28T00:00:00Z",
+    priority: "High",
+    description: "Analyze current and emerging market trends in defense technology"
+  },
+  {
+    id: "bt2",
+    title: "Conduct competitive landscape review",
+    status: "In Progress",
+    assignee: "Michael Rodriguez",
+    dueDate: "2025-06-02T00:00:00Z",
+    priority: "Critical",
+    description: "Review competitive positioning and identify key competitors"
+  },
+  {
+    id: "bt3",
+    title: "Finalize technology assessment",
+    status: "In Progress",
+    assignee: "Jennifer Kim",
+    dueDate: "2025-06-05T00:00:00Z",
+    priority: "High",
+    description: "Complete assessment of emerging technologies and their applications"
+  },
+  {
+    id: "bt4",
+    title: "Prepare executive summary",
+    status: "Pending",
+    assignee: "David Thompson",
+    dueDate: "2025-06-08T00:00:00Z",
+    priority: "Medium",
+    description: "Create executive summary for stakeholder presentation"
+  }
+];
 
 export const BriefDetails = (): JSX.Element => {
   const { briefId } = useParams<{ briefId: string }>();
@@ -122,14 +170,14 @@ export const BriefDetails = (): JSX.Element => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   
-  const [briefProcess, setBriefProcess] = useState<BriefProcess | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [briefDetails, setBriefDetails] = useState<BriefDetailData | null>(null);
+  const [tasks, setTasks] = useState<BriefTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch brief process data
+  // Fetch brief details
   useEffect(() => {
-    const fetchBriefProcess = async () => {
+    const fetchBriefDetails = async () => {
       if (!briefId) return;
       
       setIsLoading(true);
@@ -138,46 +186,48 @@ export const BriefDetails = (): JSX.Element => {
       try {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
-        setBriefProcess(mockBriefProcess);
+        
+        const details = mockBriefDetails[briefId];
+        if (!details) {
+          setError("Brief not found");
+          return;
+        }
+        
+        setBriefDetails(details);
+        setTasks(mockBriefTasks);
       } catch (error) {
-        console.error("Error fetching brief process:", error);
+        console.error("Error fetching brief details:", error);
         setError("Failed to load brief details. Please try again later.");
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchBriefProcess();
+    fetchBriefDetails();
   }, [briefId]);
 
   // Generate breadcrumb items
   const breadcrumbItems = React.useMemo(() => {
     const items = [
       { label: "Home", path: "/" },
-      { label: "Briefs", path: "/briefs" }
+      { label: "Briefs Management", path: "/briefs" }
     ];
     
-    if (briefProcess) {
+    if (briefDetails) {
+      // We'd need to determine the entity type and ID to create proper breadcrumbs
+      // For now, using a generic path back to briefs
       items.push({
-        label: briefProcess.title,
-        path: `/briefs/${briefId}`
+        label: briefDetails.clientName,
+        path: "/briefs" // Would be dynamic based on entity
+      });
+      items.push({
+        label: briefDetails.projectType,
+        path: `/briefs/details/${briefId}`
       });
     }
     
     return items;
-  }, [briefProcess, briefId]);
-
-  // Filter related briefs based on search
-  const filteredBriefs = React.useMemo(() => {
-    if (!briefProcess) return [];
-    
-    return briefProcess.relatedBriefs.filter((brief) =>
-      brief.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      brief.projectType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      brief.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      brief.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [briefProcess, searchTerm]);
+  }, [briefDetails, briefId]);
 
   // Get progress color
   const getProgressColor = (progress: number) => {
@@ -187,25 +237,64 @@ export const BriefDetails = (): JSX.Element => {
     return isDark ? 'bg-red-500' : 'bg-red-600';
   };
 
-  // Handle export
-  const handleExport = () => {
-    console.log("Exporting brief process data...");
-    // TODO: Implement export functionality
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Complete': return isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800';
+      case 'In Progress': return isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800';
+      case 'Review': return isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800';
+      case 'Draft': return isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
+      default: return isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
+    }
   };
 
-  // Handle brief actions
-  const handleEditBrief = (brief: Brief) => {
-    console.log("Edit brief:", brief);
+  // Get timeline status styles
+  const getTimelineStatusStyles = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return {
+          dot: isDark ? 'bg-green-500' : 'bg-green-600',
+          line: isDark ? 'bg-green-500' : 'bg-green-600'
+        };
+      case 'in-progress':
+        return {
+          dot: isDark ? 'bg-blue-500' : 'bg-blue-600',
+          line: isDark ? 'bg-blue-500' : 'bg-blue-600'
+        };
+      default:
+        return {
+          dot: isDark ? 'bg-gray-600' : 'bg-gray-300',
+          line: isDark ? 'bg-gray-600' : 'bg-gray-300'
+        };
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Handle actions
+  const handleEdit = () => {
+    console.log("Edit brief:", briefDetails);
     // TODO: Implement edit functionality
   };
 
-  const handleArchiveBrief = (brief: Brief) => {
-    console.log("Archive brief:", brief);
-    // TODO: Implement archive functionality
+  const handleExport = () => {
+    console.log("Export brief:", briefDetails);
+    // TODO: Implement export functionality
   };
 
-  const handleBriefClick = (briefId: string) => {
-    navigate(`/briefs/${briefId}`);
+  const handleShare = () => {
+    console.log("Share brief:", briefDetails);
+    // TODO: Implement share functionality
   };
 
   // Loading state
@@ -226,7 +315,7 @@ export const BriefDetails = (): JSX.Element => {
   }
 
   // Error state
-  if (error || !briefProcess) {
+  if (error || !briefDetails) {
     return (
       <div className={`${isDark ? 'bg-[#100e24]' : 'bg-gray-100'} flex-1 h-screen transition-colors duration-300 flex items-center justify-center`}>
         <div className="text-center">
@@ -239,7 +328,7 @@ export const BriefDetails = (): JSX.Element => {
               isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
             }`}
           >
-            Back to Briefs
+            Back to Briefs Management
           </Button>
         </div>
       </div>
@@ -257,7 +346,7 @@ export const BriefDetails = (): JSX.Element => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/briefs')}
+            onClick={() => navigate(-1)}
             className={`mr-4 ${
               isDark 
               ? "text-gray-300 hover:bg-[#201e3d]" 
@@ -265,30 +354,44 @@ export const BriefDetails = (): JSX.Element => {
             }`}
           >
             <ArrowLeftIcon className="w-4 h-4 mr-1" />
-            Back to Briefs
+            Back
           </Button>
         </div>
 
-        {/* Brief Process Header */}
+        {/* Brief Header */}
         <div className={`rounded-lg shadow-md p-6 mb-6 ${
           isDark ? 'bg-[#17162e] text-white' : 'bg-white text-gray-800'
         }`}>
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between mb-6">
             <div className="flex-1">
-              <h1 className={`text-2xl font-bold mb-2 ${
-                isDark ? 'text-white' : 'text-gray-800'
-              }`}>
-                {briefProcess.title}
-              </h1>
+              <div className="flex items-center space-x-3 mb-3">
+                <h1 className={`text-2xl font-bold ${
+                  isDark ? 'text-white' : 'text-gray-800'
+                }`}>
+                  {briefDetails.projectType}
+                </h1>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  getStatusColor(briefDetails.status)
+                }`}>
+                  {briefDetails.status}
+                </span>
+              </div>
+              
               <p className={`text-sm mb-4 ${
                 isDark ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                {briefProcess.description}
+                {briefDetails.clientName}
+              </p>
+              
+              <p className={`mb-4 ${
+                isDark ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                {briefDetails.description}
               </p>
               
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-4">
-                {briefProcess.tags.map((tag, index) => (
+                {briefDetails.tags?.map((tag, index) => (
                   <span 
                     key={index}
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -304,6 +407,30 @@ export const BriefDetails = (): JSX.Element => {
             </div>
 
             <div className="flex items-center space-x-3">
+              <Button
+                onClick={handleEdit}
+                variant="outline"
+                className={`${
+                  isDark 
+                  ? "border-[#2e2c50] text-white hover:bg-[#201e3d]" 
+                  : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <EditIcon className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                className={`${
+                  isDark 
+                  ? "border-[#2e2c50] text-white hover:bg-[#201e3d]" 
+                  : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <Share2Icon className="w-4 h-4 mr-2" />
+                Share
+              </Button>
               <Button
                 onClick={handleExport}
                 variant="outline"
@@ -325,12 +452,12 @@ export const BriefDetails = (): JSX.Element => {
               <span className={`text-sm font-medium ${
                 isDark ? "text-gray-300" : "text-gray-700"
               }`}>
-                Overall Progress
+                Progress
               </span>
               <span className={`text-sm font-medium ${
                 isDark ? "text-gray-300" : "text-gray-700"
               }`}>
-                {briefProcess.progress}% complete
+                {briefDetails.progress}% complete
               </span>
             </div>
             <div className={`w-full h-3 rounded-full ${
@@ -338,68 +465,209 @@ export const BriefDetails = (): JSX.Element => {
             }`}>
               <div 
                 className={`h-3 rounded-full transition-all duration-300 ${
-                  getProgressColor(briefProcess.progress)
+                  getProgressColor(briefDetails.progress)
                 }`}
-                style={{ width: `${briefProcess.progress}%` }}
+                style={{ width: `${briefDetails.progress}%` }}
               ></div>
             </div>
           </div>
         </div>
 
-        {/* Tasks Section */}
-        <div className="mb-6">
-          <BriefTaskSection 
-            tasks={briefProcess.tasks}
-            isDark={isDark}
-          />
-        </div>
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Main Content - Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Brief Content */}
+            <div className={`rounded-lg border p-6 ${
+              isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}>
+                Overview
+              </h3>
+              <p className={`${
+                isDark ? "text-gray-300" : "text-gray-600"
+              } leading-relaxed`}>
+                {briefDetails.content}
+              </p>
+            </div>
 
-        {/* Related Briefs Section */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-              Related Briefs ({filteredBriefs.length})
-            </h2>
-            
-            <div className="flex items-center space-x-4">
-              {/* Search Bar */}
-              <div className={`relative ${isDark ? "text-white" : "text-gray-800"}`}>
-                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search related briefs..."
-                  className={`pl-10 pr-4 py-2 rounded-lg text-sm w-64 ${
-                    isDark ? "bg-[#201e3d] text-white" : "bg-white text-gray-800"
-                  } border ${isDark ? "border-[#2e2c50]" : "border-gray-200"}`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
+            {/* Objectives */}
+            <div className={`rounded-lg border p-6 ${
+              isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}>
+                Objectives
+              </h3>
+              <ul className="space-y-2">
+                {briefDetails.objectives.map((objective, index) => (
+                  <li key={index} className={`flex items-start space-x-3 ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                      isDark ? "bg-blue-400" : "bg-blue-600"
+                    }`}></span>
+                    <span>{objective}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Methodology */}
+            <div className={`rounded-lg border p-6 ${
+              isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}>
+                Methodology
+              </h3>
+              <p className={`${
+                isDark ? "text-gray-300" : "text-gray-600"
+              } leading-relaxed`}>
+                {briefDetails.methodology}
+              </p>
+            </div>
+
+            {/* Findings */}
+            <div className={`rounded-lg border p-6 ${
+              isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}>
+                Key Findings
+              </h3>
+              <p className={`${
+                isDark ? "text-gray-300" : "text-gray-600"
+              } leading-relaxed`}>
+                {briefDetails.findings}
+              </p>
+            </div>
+
+            {/* Recommendations */}
+            <div className={`rounded-lg border p-6 ${
+              isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}>
+                Recommendations
+              </h3>
+              <ul className="space-y-3">
+                {briefDetails.recommendations.map((recommendation, index) => (
+                  <li key={index} className={`flex items-start space-x-3 ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
+                      isDark ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-800"
+                    }`}>
+                      {index + 1}
+                    </span>
+                    <span>{recommendation}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          {/* Briefs Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBriefs.length === 0 ? (
-              <div className={`col-span-full text-center py-12 ${
-                isDark ? "text-gray-400" : "text-gray-500"
+          {/* Sidebar - Right Column */}
+          <div className="space-y-6">
+            {/* Timeline */}
+            <div className={`rounded-lg border p-6 ${
+              isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
               }`}>
-                <p className="text-lg mb-2">No related briefs found</p>
-                <p>Try adjusting your search criteria.</p>
+                Timeline
+              </h3>
+              <div className="space-y-4">
+                {briefDetails.timeline.map((item, index) => {
+                  const styles = getTimelineStatusStyles(item.status);
+                  const isLast = index === briefDetails.timeline.length - 1;
+                  
+                  return (
+                    <div key={item.id} className="relative">
+                      <div className="flex items-start space-x-3">
+                        <div className="relative flex flex-col items-center">
+                          <div className={`w-3 h-3 rounded-full ${styles.dot}`}></div>
+                          {!isLast && (
+                            <div className={`w-0.5 h-6 mt-1 ${styles.line}`}></div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium ${
+                            isDark ? "text-white" : "text-gray-900"
+                          }`}>
+                            {item.event}
+                          </p>
+                          <p className={`text-xs ${
+                            isDark ? "text-gray-400" : "text-gray-500"
+                          }`}>
+                            {formatDate(item.date)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ) : (
-              filteredBriefs.map((brief) => (
-                <BriefCard
-                  key={brief.id}
-                  brief={brief}
-                  isDark={isDark}
-                  onEdit={handleEditBrief}
-                  onArchive={handleArchiveBrief}
-                  onClick={handleBriefClick}
-                />
-              ))
-            )}
+            </div>
+
+            {/* Attachments */}
+            <div className={`rounded-lg border p-6 ${
+              isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}>
+                Attachments
+              </h3>
+              <div className="space-y-3">
+                {briefDetails.attachments.map((attachment) => (
+                  <div key={attachment.id} className={`flex items-center justify-between p-3 rounded-lg ${
+                    isDark ? "bg-[#201e3d]" : "bg-gray-50"
+                  }`}>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${
+                        isDark ? "text-white" : "text-gray-900"
+                      }`}>
+                        {attachment.name}
+                      </p>
+                      <p className={`text-xs ${
+                        isDark ? "text-gray-400" : "text-gray-500"
+                      }`}>
+                        {attachment.type} • {attachment.size}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`${
+                        isDark 
+                        ? "text-blue-400 hover:bg-[#17162e]" 
+                        : "text-blue-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      <DownloadIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+        </div>
+
+        {/* Tasks Section */}
+        <div className="mb-8">
+          <BriefTaskSection 
+            tasks={tasks}
+            isDark={isDark}
+          />
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-// src/App.tsx (updated)
+// src/App.tsx (updated with proper brief routing)
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -17,7 +17,7 @@ import {
   Settings,
   Help,
   Briefs,
-  BriefDetails,
+  BriefDetails, // This will be for individual brief details
   CompanyDetails,
   ProjectDetails,
   DataSourceDetails,
@@ -25,6 +25,7 @@ import {
   ContactDataSourceDetails,
   ProjectDataSourceDetails
 } from "./pages";
+import { BriefManager } from "./pages/BriefManager"; // New brief manager page
 
 export const App = (): JSX.Element => {
   return (
@@ -47,8 +48,12 @@ export const App = (): JSX.Element => {
               <Route path="clients/:companyId/datasources/:dataSourceId" element={<DataSourceDetails />} />
               <Route path="contacts/:contactId" element={<ContactDetails />} />
               <Route path="contacts/:contactId/datasources/:dataSourceId" element={<ContactDataSourceDetails />} />
-              <Route path="/briefs" element={<Briefs />} />
-              <Route path="/briefs/:briefId" element={<BriefDetails />} />
+              
+              {/* Brief routes - updated structure */}
+              <Route path="briefs" element={<Briefs />} />
+              <Route path="briefs/:entityType/:entityId" element={<BriefManager />} />
+              <Route path="briefs/details/:briefId" element={<BriefDetails />} />
+              
               <Route path="opportunities" element={<Opportunities />} />
               <Route path="projects" element={<Projects />} />
               <Route path="projects/:projectId" element={<ProjectDetails />} />

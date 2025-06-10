@@ -1,200 +1,274 @@
-// src/pages/Briefs.tsx
+// src/pages/Briefs.tsx - Updated to Briefs Management Directory
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Button } from "../components/components/button";
-import { PlusIcon, SearchIcon } from "lucide-react";
+import { SearchIcon, Building2, FolderOpen, FileText } from "lucide-react";
 import { Breadcrumb } from "../components/Breadcrumb";
-import { BriefCard } from "../components/BriefCard";
-import { AddBriefCard } from "../components/AddBriefCard";
-import { Brief, BriefFilters } from "../types/brief";
 
-// Mock data for briefs
-const mockBriefs: Brief[] = [
+// Company/Project Brief Summary interface
+interface BriefEntity {
+  id: string;
+  name: string; // Company or Project name
+  type: "company" | "project";
+  briefCount: number;
+  activeBriefs: number;
+  completedBriefs: number;
+  lastActivity: string;
+  status: "Active" | "On Hold" | "Completed";
+  description?: string;
+}
+
+// Mock data for brief entities (companies/projects with their brief summaries)
+const mockBriefEntities: BriefEntity[] = [
   {
-    id: "1",
-    clientName: "General Dynamics",
-    projectType: "Product Expansion",
-    progress: 60,
-    status: "In Progress",
-    lastUpdated: "2025-05-29T10:30:00Z",
-    tags: ["Ack", "High Priority"],
-    description: "Strategic analysis for expanding into new defense markets",
-    createdAt: "2025-05-15T09:00:00Z"
+    id: "c1",
+    name: "General Dynamics",
+    type: "company",
+    briefCount: 8,
+    activeBriefs: 3,
+    completedBriefs: 5,
+    lastActivity: "2025-05-29T10:30:00Z",
+    status: "Active",
+    description: "Defense contractor with multiple strategic initiatives"
   },
   {
-    id: "2",
-    clientName: "Northrop Grumman",
-    projectType: "Market Research",
-    progress: 100,
-    status: "Complete",
-    lastUpdated: "2025-05-28T14:45:00Z",
-    tags: ["Research", "Complete"],
-    description: "Comprehensive market analysis for space defense sector",
-    createdAt: "2025-05-10T11:00:00Z"
+    id: "c2", 
+    name: "Northrop Grumman",
+    type: "company",
+    briefCount: 5,
+    activeBriefs: 2,
+    completedBriefs: 3,
+    lastActivity: "2025-05-28T14:45:00Z",
+    status: "Active",
+    description: "Aerospace and defense technology corporation"
   },
   {
-    id: "3",
-    clientName: "Raytheon Technologies",
-    projectType: "Brand Strategy",
-    progress: 25,
-    status: "Draft",
-    lastUpdated: "2025-05-27T16:20:00Z",
-    tags: ["Marketing", "Strategy"],
-    description: "Rebranding initiative for next-generation radar systems",
-    createdAt: "2025-05-20T13:30:00Z"
+    id: "c3",
+    name: "Raytheon Technologies", 
+    type: "company",
+    briefCount: 6,
+    activeBriefs: 4,
+    completedBriefs: 2,
+    lastActivity: "2025-05-27T16:20:00Z",
+    status: "Active",
+    description: "Aerospace and defense conglomerate"
   },
   {
-    id: "4",
-    clientName: "Lockheed Martin",
-    projectType: "Digital Transformation",
-    progress: 85,
-    status: "Review",
-    lastUpdated: "2025-05-26T12:15:00Z",
-    tags: ["Digital", "Transformation"],
-    description: "Digital modernization roadmap for manufacturing processes",
-    createdAt: "2025-05-12T08:45:00Z"
+    id: "c4",
+    name: "Lockheed Martin",
+    type: "company", 
+    briefCount: 3,
+    activeBriefs: 1,
+    completedBriefs: 2,
+    lastActivity: "2025-05-26T12:15:00Z",
+    status: "On Hold",
+    description: "Global aerospace, arms, defense, and technology corporation"
   },
   {
-    id: "5",
-    clientName: "Boeing Defense",
-    projectType: "Cost Optimization",
-    progress: 45,
-    status: "In Progress",
-    lastUpdated: "2025-05-25T09:30:00Z",
-    tags: ["Cost", "Efficiency"],
-    description: "Supply chain optimization for military aircraft production",
-    createdAt: "2025-05-18T15:20:00Z"
+    id: "p1",
+    name: "Digital Transformation Initiative",
+    type: "project",
+    briefCount: 12,
+    activeBriefs: 7,
+    completedBriefs: 5,
+    lastActivity: "2025-05-29T09:00:00Z", 
+    status: "Active",
+    description: "Cross-company digital modernization project"
   },
   {
-    id: "6",
-    clientName: "BAE Systems",
-    projectType: "Competitive Analysis",
-    progress: 90,
-    status: "Review",
-    lastUpdated: "2025-05-24T11:45:00Z",
-    tags: ["Analysis", "Intelligence"],
-    description: "Competitive landscape assessment for naval systems",
-    createdAt: "2025-05-08T10:15:00Z"
-  },
-  {
-    id: "7",
-    clientName: "L3Harris Technologies",
-    projectType: "New Product Launch",
-    progress: 15,
-    status: "Draft",
-    lastUpdated: "2025-05-23T14:30:00Z",
-    tags: ["Launch", "Product"],
-    description: "Go-to-market strategy for advanced communication systems",
-    createdAt: "2025-05-22T12:00:00Z"
-  },
-  {
-    id: "8",
-    clientName: "CACI International",
-    projectType: "Customer Experience",
-    progress: 70,
-    status: "In Progress",
-    lastUpdated: "2025-05-22T16:00:00Z",
-    tags: ["CX", "Service"],
-    description: "Customer journey optimization for government services",
-    createdAt: "2025-05-14T09:30:00Z"
+    id: "p2",
+    name: "Market Research 2025",
+    type: "project",
+    briefCount: 4,
+    activeBriefs: 2,
+    completedBriefs: 2,
+    lastActivity: "2025-05-25T11:30:00Z",
+    status: "Active",
+    description: "Annual market analysis and competitive intelligence"
   }
 ];
+
+// Entity Card Component
+interface EntityCardProps {
+  entity: BriefEntity;
+  isDark: boolean;
+  onClick: (entityId: string) => void;
+}
+
+const EntityCard: React.FC<EntityCardProps> = ({ entity, isDark, onClick }) => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Active': return isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-800';
+      case 'On Hold': return isDark ? 'bg-yellow-900/30 text-yellow-400' : 'bg-yellow-100 text-yellow-800';
+      case 'Completed': return isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
+      default: return isDark ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-200 text-gray-600';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const EntityIcon = entity.type === 'company' ? Building2 : FolderOpen;
+
+  return (
+    <div 
+      className={`rounded-lg border p-6 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+        isDark 
+          ? "bg-[#17162e] border-[#2e2c50] hover:border-[#3e3c60]" 
+          : "bg-white border-gray-200 hover:border-gray-300"
+      }`}
+      onClick={() => onClick(entity.id)}
+    >
+      {/* Header */}
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center space-x-3 flex-1">
+          <div className={`p-2 rounded-lg ${
+            isDark ? 'bg-[#201e3d]' : 'bg-gray-100'
+          }`}>
+            <EntityIcon className={`w-5 h-5 ${
+              isDark ? 'text-blue-400' : 'text-blue-600'
+            }`} />
+          </div>
+          <div className="flex-1">
+            <h3 className={`text-lg font-semibold mb-1 ${
+              isDark ? "text-white" : "text-gray-900"
+            }`}>
+              {entity.name}
+            </h3>
+            <p className={`text-sm ${
+              isDark ? "text-gray-400" : "text-gray-500"
+            }`}>
+              {entity.description}
+            </p>
+          </div>
+        </div>
+        
+        {/* Status Tag */}
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          getStatusColor(entity.status)
+        }`}>
+          {entity.status}
+        </span>
+      </div>
+
+      {/* Brief Statistics */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className={`text-center p-3 rounded-lg ${
+          isDark ? 'bg-[#201e3d]' : 'bg-gray-50'
+        }`}>
+          <div className={`text-2xl font-bold ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>
+            {entity.briefCount}
+          </div>
+          <div className={`text-xs ${
+            isDark ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Total Briefs
+          </div>
+        </div>
+        
+        <div className={`text-center p-3 rounded-lg ${
+          isDark ? 'bg-[#201e3d]' : 'bg-gray-50'
+        }`}>
+          <div className={`text-2xl font-bold ${
+            isDark ? 'text-blue-400' : 'text-blue-600'
+          }`}>
+            {entity.activeBriefs}
+          </div>
+          <div className={`text-xs ${
+            isDark ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Active
+          </div>
+        </div>
+        
+        <div className={`text-center p-3 rounded-lg ${
+          isDark ? 'bg-[#201e3d]' : 'bg-gray-50'
+        }`}>
+          <div className={`text-2xl font-bold ${
+            isDark ? 'text-green-400' : 'text-green-600'
+          }`}>
+            {entity.completedBriefs}
+          </div>
+          <div className={`text-xs ${
+            isDark ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Completed
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center text-sm text-gray-500">
+          <FileText className="w-4 h-4 mr-1" />
+          <span>Last activity {formatDate(entity.lastActivity)}</span>
+        </div>
+        
+        <div className={`text-sm font-medium ${
+          isDark ? 'text-blue-400' : 'text-blue-600'
+        }`}>
+          View Briefs →
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const Briefs = (): JSX.Element => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   
-  const [briefs, setBriefs] = useState<Brief[]>(mockBriefs);
-  const [showAddBrief, setShowAddBrief] = useState(false);
+  const [entities, setEntities] = useState<BriefEntity[]>(mockBriefEntities);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<BriefFilters>({
-    client: "",
-    status: ""
-  });
+  const [typeFilter, setTypeFilter] = useState<"all" | "company" | "project">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "On Hold" | "Completed">("all");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Custom breadcrumb items for briefs page
+  // Custom breadcrumb items for briefs management page
   const breadcrumbItems = React.useMemo(() => {
     return [
       { label: "Home", path: "/" },
-      { label: "Briefs", path: "/briefs" }
+      { label: "Briefs Management", path: "/briefs" }
     ];
   }, []);
 
-  // Get unique clients and statuses for filters
-  const uniqueClients = React.useMemo(() => {
-    return Array.from(new Set(briefs.map(brief => brief.clientName))).sort();
-  }, [briefs]);
-
-  const uniqueStatuses = React.useMemo(() => {
-    return Array.from(new Set(briefs.map(brief => brief.status))).sort();
-  }, [briefs]);
-
-  // Filter briefs based on search term and filters
-  const filteredBriefs = React.useMemo(() => {
-    return briefs.filter((brief) => {
+  // Filter entities based on search term and filters
+  const filteredEntities = React.useMemo(() => {
+    return entities.filter((entity) => {
       const matchesSearch = 
-        brief.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        brief.projectType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        brief.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        brief.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+        entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entity.description?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesClient = !filters.client || brief.clientName === filters.client;
-      const matchesStatus = !filters.status || brief.status === filters.status;
+      const matchesType = typeFilter === "all" || entity.type === typeFilter;
+      const matchesStatus = statusFilter === "all" || entity.status === statusFilter;
       
-      return matchesSearch && matchesClient && matchesStatus;
+      return matchesSearch && matchesType && matchesStatus;
     });
-  }, [briefs, searchTerm, filters]);
+  }, [entities, searchTerm, typeFilter, statusFilter]);
 
-  // Add new brief
-  const addBrief = async (briefData: Omit<Brief, "id" | "createdAt" | "lastUpdated">) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const newBrief: Brief = {
-        ...briefData,
-        id: (briefs.length + 1).toString(),
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
-      };
-      
-      setBriefs([newBrief, ...briefs]);
-      setShowAddBrief(false);
-    } catch (error) {
-      console.error("Failed to add brief", error);
-      setError("Failed to add brief. Please try again.");
-    } finally {
-      setIsLoading(false);
+  // Handle entity click - navigate to entity brief manager
+  const handleEntityClick = (entityId: string) => {
+    const entity = entities.find(e => e.id === entityId);
+    if (entity) {
+      if (entity.type === "company") {
+        navigate(`/briefs/company/${entityId}`);
+      } else {
+        navigate(`/briefs/project/${entityId}`);
+      }
     }
-  };
-
-  // Handle brief click - navigate to brief details
-  const handleBriefClick = (briefId: string) => {
-    navigate(`/briefs/${briefId}`);
-  };
-
-  // Handle edit brief
-  const handleEditBrief = (brief: Brief) => {
-    console.log("Edit brief:", brief);
-    // TODO: Implement edit functionality
-  };
-
-  // Handle archive brief
-  const handleArchiveBrief = (brief: Brief) => {
-    setBriefs(briefs.map(b => 
-      b.id === brief.id 
-        ? { ...b, status: 'Archived' as const, lastUpdated: new Date().toISOString() }
-        : b
-    ));
-  };
-
-  // Handle filter changes
-  const handleFilterChange = (filterType: keyof BriefFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [filterType]: value }));
   };
 
   return (
@@ -203,11 +277,16 @@ export const Briefs = (): JSX.Element => {
         {/* Breadcrumb */}
         <Breadcrumb items={breadcrumbItems} />
 
-        {/* Header with title, search, filters, and add button */}
+        {/* Header with title, search, and filters */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
-          <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
-            Briefs
-          </h1>
+          <div>
+            <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"} mb-2`}>
+              Briefs Management Directory
+            </h1>
+            <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+              Organize and manage briefs by company and project
+            </p>
+          </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             {/* Search Input */}
@@ -215,7 +294,7 @@ export const Briefs = (): JSX.Element => {
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search briefs..."
+                placeholder="Search entities..."
                 className={`pl-10 pr-4 py-2 rounded-lg text-sm w-full sm:w-64 ${
                   isDark ? "bg-[#201e3d] text-white" : "bg-white text-gray-800"
                 } border ${isDark ? "border-[#2e2c50]" : "border-gray-200"}`}
@@ -224,58 +303,97 @@ export const Briefs = (): JSX.Element => {
               />
             </div>
 
-            {/* Client Filter */}
+            {/* Type Filter */}
             <select
-              value={filters.client}
-              onChange={(e) => handleFilterChange('client', e.target.value)}
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as any)}
               className={`px-3 py-2 rounded-lg text-sm ${
                 isDark ? "bg-[#201e3d] text-white" : "bg-white text-gray-800"
               } border ${isDark ? "border-[#2e2c50]" : "border-gray-200"}`}
             >
-              <option value="">All Clients</option>
-              {uniqueClients.map(client => (
-                <option key={client} value={client}>{client}</option>
-              ))}
+              <option value="all">All Types</option>
+              <option value="company">Companies</option>
+              <option value="project">Projects</option>
             </select>
 
             {/* Status Filter */}
             <select
-              value={filters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
               className={`px-3 py-2 rounded-lg text-sm ${
                 isDark ? "bg-[#201e3d] text-white" : "bg-white text-gray-800"
               } border ${isDark ? "border-[#2e2c50]" : "border-gray-200"}`}
             >
-              <option value="">All Status</option>
-              {uniqueStatuses.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
+              <option value="all">All Status</option>
+              <option value="Active">Active</option>
+              <option value="On Hold">On Hold</option>
+              <option value="Completed">Completed</option>
             </select>
-
-            {/* Add Brief Button */}
-            <Button
-              onClick={() => setShowAddBrief(true)}
-              className={`${
-                isDark ? "bg-[#14ea29] hover:bg-[#14ea29]/90 text-black" : "bg-blue-700 hover:bg-blue-800 text-white"
-              } whitespace-nowrap`}
-              disabled={isLoading}
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              New Brief
-            </Button>
           </div>
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className={`rounded-lg border-l-4 p-4 mb-6 ${
-            isDark 
-            ? "bg-red-900/30 border-red-500 text-red-300" 
-            : "bg-red-50 border-red-500 text-red-700"
+        {/* Summary Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className={`rounded-lg border p-4 ${
+            isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
           }`}>
-            <p>{error}</p>
+            <div className={`text-2xl font-bold ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              {entities.length}
+            </div>
+            <div className={`text-sm ${
+              isDark ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Total Entities
+            </div>
           </div>
-        )}
+          
+          <div className={`rounded-lg border p-4 ${
+            isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+          }`}>
+            <div className={`text-2xl font-bold ${
+              isDark ? 'text-blue-400' : 'text-blue-600'
+            }`}>
+              {entities.reduce((sum, entity) => sum + entity.briefCount, 0)}
+            </div>
+            <div className={`text-sm ${
+              isDark ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Total Briefs
+            </div>
+          </div>
+          
+          <div className={`rounded-lg border p-4 ${
+            isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+          }`}>
+            <div className={`text-2xl font-bold ${
+              isDark ? 'text-yellow-400' : 'text-yellow-600'
+            }`}>
+              {entities.reduce((sum, entity) => sum + entity.activeBriefs, 0)}
+            </div>
+            <div className={`text-sm ${
+              isDark ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Active Briefs
+            </div>
+          </div>
+          
+          <div className={`rounded-lg border p-4 ${
+            isDark ? "bg-[#17162e] border-[#2e2c50]" : "bg-white border-gray-200"
+          }`}>
+            <div className={`text-2xl font-bold ${
+              isDark ? 'text-green-400' : 'text-green-600'
+            }`}>
+              {entities.reduce((sum, entity) => sum + entity.completedBriefs, 0)}
+            </div>
+            <div className={`text-sm ${
+              isDark ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Completed Briefs
+            </div>
+          </div>
+        </div>
 
         {/* Loading state */}
         {isLoading ? (
@@ -298,41 +416,28 @@ export const Briefs = (): JSX.Element => {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <span>Loading briefs...</span>
+            <span>Loading brief entities...</span>
           </div>
         ) : (
-          /* Briefs Grid */
+          /* Entity Cards Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {filteredBriefs.length === 0 ? (
+            {filteredEntities.length === 0 ? (
               <div className={`col-span-full text-center py-12 ${
                 isDark ? "text-gray-400" : "text-gray-500"
               }`}>
-                <p className="text-lg mb-2">No briefs found</p>
-                <p>Create your first brief with the button above.</p>
+                <p className="text-lg mb-2">No entities found</p>
+                <p>Try adjusting your search criteria or filters.</p>
               </div>
             ) : (
-              filteredBriefs.map((brief) => (
-                <BriefCard
-                  key={brief.id}
-                  brief={brief}
+              filteredEntities.map((entity) => (
+                <EntityCard
+                  key={entity.id}
+                  entity={entity}
                   isDark={isDark}
-                  onEdit={handleEditBrief}
-                  onArchive={handleArchiveBrief}
-                  onClick={handleBriefClick}
+                  onClick={handleEntityClick}
                 />
               ))
             )}
-          </div>
-        )}
-
-        {/* Add Brief Modal */}
-        {showAddBrief && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
-            <AddBriefCard
-              onAdd={addBrief}
-              onCancel={() => setShowAddBrief(false)}
-              isDark={isDark}
-            />
           </div>
         )}
       </div>
